@@ -144,9 +144,7 @@ export class Fraction {
 
   // performs floor division
   toBigInt(): BigInt {
-    const numerator: BigInt = BigInt.from(this.numerator);
-    const denominator: BigInt = BigInt.from(this.denominator);
-    return numerator.div(denominator);
+    return this.numerator.div(this.denominator);
   }
 
   toArray(): BigInt[] {
