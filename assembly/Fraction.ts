@@ -28,15 +28,17 @@ export class Fraction {
   /**
    * Returns a new {Fraction} instance from generic type {T}.
    *
-   * @param  val the number as {BigNumber}, {BigInt}, string, or {number}
+   * @param  val the number as {BigNumber}, {BigInt}, {BigInt[]}, string, or {number}
    * @return BigNumber the new {Fraction} instance
    */
   static from<T>(val: T): Fraction {
     if (val instanceof Fraction) return val;
     // @ts-ignore
-    if (val instanceof string) return Fraction.fromString(val);
+    if (val instanceof Array) return Fraction.fromArray(val);
     // @ts-ignore
     if (val instanceof BigNumber) return Fraction.fromBigNumber(val);
+    // @ts-ignore
+    if (val instanceof string) return Fraction.fromString(val);
     // @ts-ignore
     if (val instanceof BigInt) return new Fraction(val);
     // @ts-ignore
@@ -63,6 +65,15 @@ export class Fraction {
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
+  static fromArray(arr: BigInt[]): Fraction {
+    if (arr.length != 2) {
+      throw new Error(
+          "Unexpected length: expected a BigInt[] of length 2 in the form [numerator, denominator]"
+      );
+    }
+    return new Fraction(arr[0], arr[1]);
+  }
+
   static fromBigNumber(val: BigNumber): Fraction {
     if (val.e > 0) {
       const scale = BigInt.fromString("1".padEnd(1 + val.e, "0"));
@@ -86,7 +97,7 @@ export class Fraction {
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   toString(): string {
-    return `(${this.numerator.toString()} / ${this.denominator.toString()})`
+    return `[${this.numerator.toString()}, ${this.denominator.toString()}]`
   }
 
   toNumberString(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): string {
@@ -136,6 +147,10 @@ export class Fraction {
     const numerator: BigInt = BigInt.from(this.numerator);
     const denominator: BigInt = BigInt.from(this.denominator);
     return numerator.div(denominator);
+  }
+
+  toArray(): BigInt[] {
+    return [this.numerator, this.denominator];
   }
 
   quotient(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {

@@ -430,6 +430,6 @@ describe('String operations', () => {
   describe("toString", () => {
     const str: string = "1234.42";
     const frac: Fraction = Fraction.fromString(str);
-    expect(frac.toString()).toStrictEqual("(123442 / 100)");
+    expect(frac.toString()).toStrictEqual("[123442, 100]");
   });
 });

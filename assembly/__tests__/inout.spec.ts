@@ -18,6 +18,12 @@ describe('Construction', () => {
     expect(frac.toNumberString()).toStrictEqual(str);
   });
 
+  it("fromArray", () => {
+    const arr: BigInt[] = [BigInt.from(1), BigInt.from(3)];
+    const frac: Fraction = Fraction.fromArray(arr);
+    expect(frac.toString()).toStrictEqual("[1, 3]");
+  });
+
   it("generic from", () => {
     const decimalStr: string = "1234.42";
     const bn: BigNumber = BigNumber.from(decimalStr);
@@ -44,20 +50,6 @@ describe('Construction', () => {
     expect(Fraction.from(intStr).eq(Fraction.from(uint64))).toBe(true);
   });
 
-  it("toBigInt", () => {
-    expect(
-        new Fraction(BigInt.fromUInt16(8), BigInt.fromUInt16(3)).toBigInt()
-    ).toBe(BigInt.fromUInt16(2))
-
-    expect(
-        new Fraction(BigInt.fromUInt16(12), BigInt.fromUInt16(4)).toBigInt()
-    ).toBe(BigInt.fromUInt16(3))
-
-    expect(
-        new Fraction(BigInt.fromUInt16(16), BigInt.fromUInt16(5)).toBigInt()
-    ).toBe(BigInt.fromUInt16(3))
-  });
-
   it("toBigNumber", () => {
     let str: string = "1234.42";
     let frac: Fraction = Fraction.fromString(str);
@@ -73,6 +65,34 @@ describe('Construction', () => {
     frac = Fraction.fromString(str);
     bn = BigNumber.from(str);
     expect(frac.toBigNumber()).toStrictEqual(bn);
+  });
+
+  it("toBigInt", () => {
+    expect(
+        new Fraction(BigInt.fromUInt16(8), BigInt.fromUInt16(3)).toBigInt()
+    ).toStrictEqual(BigInt.fromUInt16(2))
+
+    expect(
+        new Fraction(BigInt.fromUInt16(12), BigInt.fromUInt16(4)).toBigInt()
+    ).toStrictEqual(BigInt.fromUInt16(3))
+
+    expect(
+        new Fraction(BigInt.fromUInt16(16), BigInt.fromUInt16(5)).toBigInt()
+    ).toStrictEqual(BigInt.fromUInt16(3))
+  });
+
+  it("toArray", () => {
+    expect(
+        new Fraction(BigInt.fromUInt16(8), BigInt.fromUInt16(3)).toArray()
+    ).toStrictEqual([BigInt.fromUInt16(8), BigInt.fromUInt16(3)])
+
+    expect(
+        new Fraction(BigInt.fromUInt16(12), BigInt.fromUInt16(4)).toArray()
+    ).toStrictEqual([BigInt.fromUInt16(12), BigInt.fromUInt16(4)])
+
+    expect(
+        new Fraction(BigInt.fromUInt16(16), BigInt.fromUInt16(5)).toArray()
+    ).toStrictEqual([BigInt.fromUInt16(16), BigInt.fromUInt16(5)])
   });
 
   it("quotient", () => {
