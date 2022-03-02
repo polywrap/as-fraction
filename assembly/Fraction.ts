@@ -148,7 +148,7 @@ export class Fraction {
   }
 
   toArray(): BigInt[] {
-    return [this.numerator, this.denominator];
+    return [this.numerator.copy(), this.denominator.copy()];
   }
 
   quotient(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {
@@ -171,7 +171,7 @@ export class Fraction {
   }
 
   reciprocal(): Fraction {
-    return new Fraction(this.denominator, this.numerator);
+    return new Fraction(this.denominator.copy(), this.numerator.copy());
   }
 
   // COMPARISON OPERATORS //////////////////////////////////////////////////////////////////////////////////////////////
