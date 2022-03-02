@@ -308,4 +308,123 @@ export class Fraction {
   isZero(): boolean {
     return this.numerator.isZero();
   }
+
+  get isInteger(): boolean {
+    return this.toBigNumber().isInteger;
+  }
+
+  // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+  static eq<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.eq(right);
+  }
+
+  @operator("==")
+  private static eqOp(left: Fraction, right: Fraction): boolean {
+    return left.eq(right);
+  }
+
+  static ne<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.ne(right);
+  }
+
+  @operator("!=")
+  private static neOp(left: Fraction, right: Fraction): boolean {
+    return left.ne(right);
+  }
+
+  static lt<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.lt(right);
+  }
+
+  @operator("<")
+  private static ltOp(left: Fraction, right: Fraction): boolean {
+    return left.lt(right);
+  }
+
+  static lte<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.lte(right);
+  }
+
+  @operator("<=")
+  private static lteOp(left: Fraction, right: Fraction): boolean {
+    return left.lte(right);
+  }
+
+  static gt<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.gt(right);
+  }
+
+  @operator(">")
+  private static gtOp(left: Fraction, right: Fraction): boolean {
+    return left.gt(right);
+  }
+
+  static gte<T, U>(left: T, right: U): boolean {
+    const a: Fraction = Fraction.from(left);
+    return a.gte(right);
+  }
+
+  @operator(">=")
+  private static gteOp(left: Fraction, right: Fraction): boolean {
+    return left.gte(right);
+  }
+
+  static add<T, U>(left: T, right: U): Fraction {
+    const a: Fraction = Fraction.from(left);
+    return a.add(right);
+  }
+
+  @operator("+")
+  private static addOp(left: Fraction, right: Fraction): Fraction {
+    return left.add(right);
+  }
+
+  static sub<T, U>(left: T, right: U): Fraction {
+    const a: Fraction = Fraction.from(left);
+    return a.sub(right);
+  }
+
+  @operator("-")
+  private static subOp(left: Fraction, right: Fraction): Fraction {
+    return left.sub(right);
+  }
+
+  static mul<T, U>(left: T, right: U): Fraction {
+    const a: Fraction = Fraction.from(left);
+    return a.mul(right);
+  }
+
+  @operator("*")
+  private static mulOp(left: Fraction, right: Fraction): Fraction {
+    return left.mul(right);
+  }
+
+  static div<T, U>(left: T, right: U): Fraction {
+    const a: Fraction = Fraction.from(left);
+    return a.div(right);
+  }
+
+  @operator("/")
+  static divOp(left: Fraction, right: Fraction): Fraction {
+    return left.div(right);
+  }
+
+  static pow<T>(base: T, k: i32): Fraction {
+    const x: Fraction = Fraction.from(base);
+    return x.pow(k);
+  }
+
+  @operator("**")
+  private static powOp(left: Fraction, right: Fraction): Fraction {
+    if (!right.isInteger) {
+      throw new Error("Exponent must be an integer value");
+    }
+    return left.pow(right.toBigInt().toInt32());
+  }
 }
