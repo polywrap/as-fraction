@@ -73,7 +73,7 @@ const toFixed: string = a.toFixed(places, rounding);
 
 // type conversions
 const toBigNumber: BigNumber = a.toBigNumber();
-const quotient: BigNumber = a.quotient(); // alias for toBigNumber
+const quotientNumber: BigNumber = a.quotient(); // alias for toBigNumber
 const toBigInt: BigInt = a.toBigInt();
 const toArray: Array<BigInt> = a.toArray();
 ```
