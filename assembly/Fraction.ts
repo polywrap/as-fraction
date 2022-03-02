@@ -77,17 +77,17 @@ export class Fraction {
   static fromBigNumber(val: BigNumber): Fraction {
     if (val.e > 0) {
       const scale = BigInt.fromString("1".padEnd(1 + val.e, "0"));
-      return new Fraction(val.m, scale);
+      return new Fraction(val.m.copy(), scale);
     } else if (val.e < 0) {
       const scale = BigInt.fromString("1".padEnd(1 - val.e, "0"));
       return new Fraction(val.m.mul(scale));
     } else {
-      return new Fraction(val.m);
+      return new Fraction(val.m.copy());
     }
   }
 
   static fromBigInt(val: BigInt): Fraction {
-    return new Fraction(val);
+    return new Fraction(val.copy());
   }
   
   static fromString(val: string): Fraction {
