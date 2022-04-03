@@ -65,13 +65,13 @@ export class Fraction {
     throw new TypeError("Unsupported generic type " + nameof<T>(val));
   }
 
-  static fromArray(arr: BigInt[]): Fraction {
+  static fromArray<TInt>(arr: TInt[]): Fraction {
     if (arr.length != 2) {
       throw new Error(
-          "Unexpected length: expected a BigInt[] of length 2 in the form [numerator, denominator]"
+          "Unexpected length: expected an array of length 2 in the form [numerator, denominator]"
       );
     }
-    return new Fraction(arr[0], arr[1]);
+    return new Fraction(BigInt.from(arr[0]), BigInt.from(arr[1]));
   }
 
   static fromBigNumber(val: BigNumber): Fraction {
