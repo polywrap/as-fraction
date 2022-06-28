@@ -29,7 +29,7 @@ export class Fraction {
    * Returns a new {Fraction} instance from generic type {T}.
    *
    * @param  val the number as {BigNumber}, {BigInt}, {BigInt[]}, string, or {number}
-   * @return BigNumber the new {Fraction} instance
+   * @return the new {Fraction} instance
    */
   static from<T>(val: T): Fraction {
     if (val instanceof Fraction) return val;
@@ -91,7 +91,7 @@ export class Fraction {
   }
   
   static fromString(val: string): Fraction {
-    return Fraction.fromBigNumber(BigNumber.fromString(val, 0))
+    return Fraction.fromBigNumber(BigNumber.fromString(val, 0));
   }
 
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////
