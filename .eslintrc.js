@@ -10,7 +10,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: "es2019",
     tsconfigRootDir: __dirname,
-    project: ['./assembly/tsconfig.json'],
+    project: ['./tsconfig.json'],
   },
   plugins: [
     "eslint-plugin-import",

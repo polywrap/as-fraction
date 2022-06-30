@@ -1,5 +1,6 @@
 import { BigInt } from "as-bigint";
 import { BigNumber, Rounding } from "as-bignumber";
+import {Fraction} from "./Fraction";
 
 export class BigFraction {
   public readonly numerator: BigInt;
@@ -39,6 +40,8 @@ export class BigFraction {
     if (val instanceof string) return BigFraction.fromString(val);
     // @ts-ignore
     if (val instanceof BigInt) return new BigFraction(val);
+    // @ts-ignore
+    if (val instanceof Fraction) return BigFraction.fromFraction(val);
     // @ts-ignore
     if (val instanceof f32) return BigFraction.fromBigNumber(BigNumber.fromFloat64(<f64>val));
     // @ts-ignore
@@ -90,6 +93,10 @@ export class BigFraction {
   
   static fromString(val: string): BigFraction {
     return BigFraction.fromBigNumber(BigNumber.fromString(val, 0));
+  }
+
+  static fromFraction<T extends Number>(val: Fraction<T>): BigFraction {
+    return new BigFraction(BigInt.from(val.numerator), BigInt.from(val.denominator));
   }
 
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////

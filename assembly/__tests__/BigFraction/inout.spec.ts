@@ -1,6 +1,7 @@
 import { BigInt } from "as-bigint";
 import { BigNumber } from "as-bignumber";
 import { BigFraction } from "../../BigFraction";
+import {Fraction} from "../../Fraction";
 
 describe('Construction', () => {
 
@@ -24,6 +25,12 @@ describe('Construction', () => {
     expect(frac.toString()).toStrictEqual("[1, 3]");
   });
 
+  it("fromFraction", () => {
+    const smallFrac: Fraction<i32> = new Fraction<i32>(1, 3)
+    const frac: BigFraction = BigFraction.fromFraction(smallFrac);
+    expect(frac.toString()).toStrictEqual("[1, 3]");
+  });
+
   it("generic from", () => {
     const decimalStr: string = "1234.42";
     const bn: BigNumber = BigNumber.from(decimalStr);
@@ -35,6 +42,7 @@ describe('Construction', () => {
 
     const intStr: string = "1234";
     const bi: BigInt = BigInt.from(intStr);
+    const sf: Fraction<i32> = Fraction.fromString<i32>(intStr);
     const int16: i16 = I16.parseInt(intStr);
     const int32: i32 = I32.parseInt(intStr);
     const int64: i64 = I64.parseInt(intStr);
@@ -48,6 +56,7 @@ describe('Construction', () => {
     expect(BigFraction.from(intStr).eq(BigFraction.from(uint16))).toBe(true);
     expect(BigFraction.from(intStr).eq(BigFraction.from(uint32))).toBe(true);
     expect(BigFraction.from(intStr).eq(BigFraction.from(uint64))).toBe(true);
+    expect(BigFraction.from(intStr).eq(BigFraction.from(sf))).toBe(true);
   });
 
   it("toBigNumber", () => {
