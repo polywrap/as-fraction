@@ -2,9 +2,8 @@ import { Fraction } from "../../Fraction";
 import { TestCase } from "./testUtils/TestCase";
 import { plannedTestCases } from "./testUtils/testCases";
 import {BigNumber} from "as-bignumber";
-// import { randomTestCases } from "./testUtils/randomTestCases";
 
-const testCases: TestCase[] = plannedTestCases // .concat(randomTestCases);
+const testCases: TestCase[] = plannedTestCases;
 
 describe("Arithmetic operations", () => {
 
