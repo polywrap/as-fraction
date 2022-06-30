@@ -115,7 +115,7 @@ export class BigFraction {
   }
 
   toSignificant(
-      digits: i32,
+      digits: i32 = 18,
       rounding: Rounding = Rounding.HALF_UP
   ): string {
     if (digits < 0) {
@@ -130,7 +130,7 @@ export class BigFraction {
   }
 
   toFixed(
-      places: i32,
+      places: i32 = 18,
       rounding: Rounding = Rounding.HALF_UP
   ): string {
     return BigNumber.fromFraction(

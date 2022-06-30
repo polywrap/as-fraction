@@ -89,7 +89,7 @@ describe('Construction', () => {
 
   it("quotient", () => {
     let result = new Fraction<i32>(8, 2).quotient();
-    expect(result.toString()).toStrictEqual("4");
+    expect(result.toString()).toStrictEqual("4.0");
 
     result = new Fraction<i32>(8, 20).quotient();
     expect(result.toString()).toStrictEqual("0.4");

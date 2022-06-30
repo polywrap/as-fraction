@@ -35,11 +35,11 @@ export class Fraction<T extends Number> {
       return val.toFraction<TOut>();
     }
     if (isArray<U>(val)) return this.fromArray(val);
-    if (val instanceof BigNumber) return Fraction.fromBigNumber<TOut>(val);
     if (isString<U>(val)) return Fraction.fromString<TOut>(val);
-    if (val instanceof BigInt) return Fraction.fromBigInt<TOut>(val);
-    if (isFloat<U>(val)) return Fraction.fromBigNumber<TOut>(BigNumber.fromFloat64(<f64>val), true);
+    if (isFloat<U>(val)) return Fraction.fromBigNumber<TOut>(BigNumber.fromFloat64(<f64>val));
     if (isInteger<U>(val)) return new Fraction<TOut>(<TOut>val, <TOut>1);
+    if (val instanceof BigNumber) return Fraction.fromBigNumber<TOut>(val);
+    if (val instanceof BigInt) return Fraction.fromBigInt<TOut>(val);
 
     throw new TypeError("Unsupported generic type " + nameof<U>(val));
   }
@@ -56,14 +56,9 @@ export class Fraction<T extends Number> {
     return new Fraction<W>(arr[0], arr[1]);
   }
 
-  static fromBigNumber<TOut extends Number = i64>(val: BigNumber, unsafe: boolean = false): Fraction<TOut> {
+  static fromBigNumber<TOut extends Number = i64>(val: BigNumber): Fraction<TOut> {
     if (!isInteger<TOut>()) {
       throw new TypeError("Unsupported generic type " + nameof<TOut>());
-    }
-    if (!unsafe) {
-      const outType: string = nameof<TOut>();
-      const precision: i32 = val.precision;
-      Fraction.checkBigNumberSafety(outType, precision);
     }
     if (val.e > 0) {
       const scale = BigInt.fromString("1".padEnd(1 + val.e, "0"));
@@ -116,7 +111,7 @@ export class Fraction<T extends Number> {
   }
 
   toSignificant(
-      digits: i32,
+      digits: i32 = 18,
       rounding: Rounding = Rounding.HALF_UP
   ): string {
     if (digits < 0) {
@@ -131,7 +126,7 @@ export class Fraction<T extends Number> {
   }
 
   toFixed(
-      places: i32,
+      places: i32 = 18,
       rounding: Rounding = Rounding.HALF_UP
   ): string {
     return BigNumber.fromFraction(
@@ -181,8 +176,8 @@ export class Fraction<T extends Number> {
     return BigFraction.fromArray([this.numerator, this.denominator]);
   }
 
-  quotient(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {
-    return this.toBigNumber(precision, rounding);
+  quotient(): f64 {
+    return <f64>this.numerator / <f64> this.denominator;
   }
 
   copy(): Fraction<T> {
@@ -332,16 +327,7 @@ export class Fraction<T extends Number> {
     if (this.numerator == 0) {
       return this.copy();
     }
-    const intType = nameof<T>();
-    if (intType == nameof<i64>() || intType == nameof<u64>()) {
-      return Fraction.fromBigNumber(this.toBigNumber().sqrt(19), true);
-    } else if (intType == nameof<i32>() || intType == nameof<u32>()) {
-      return Fraction.fromBigNumber(this.toBigNumber().sqrt(10), true);
-    } else if (intType == nameof<i16>() || intType == nameof<u16>()) {
-      return Fraction.fromBigNumber(this.toBigNumber().sqrt(5), true);
-    } else {
-      return Fraction.fromBigNumber(this.toBigNumber().sqrt(3), true);
-    }
+    return Fraction.from(sqrt<f64>(<f64>this.numerator) / sqrt<f64>(<f64>this.denominator));
   }
 
   pow(k: i32): Fraction<T> {
@@ -363,26 +349,6 @@ export class Fraction<T extends Number> {
 
   get isInteger(): boolean {
     return this.numerator >= this.denominator && (this.numerator % this.denominator == 0)
-  }
-
-  private static checkBigNumberSafety(outType: string, precision: i32): void {
-    if (outType == nameof<i64>() || outType == nameof<u64>()) {
-      if (precision > 19) {
-        throw new Error(`Integer overflow: BigNumber input has precision of ${precision} digits while 64 bit integers fit only 19 digits`);
-      }
-    } else if (outType == nameof<i32>() || outType == nameof<u32>()) {
-      if (precision > 10) {
-        throw new Error (`Integer overflow: BigNumber input has precision of ${precision} digits while 32 bit integers fit only 10 digits`);
-      }
-    } else if (outType == nameof<i16>() || outType == nameof<u16>()) {
-      if (precision > 5) {
-        throw new Error (`Integer overflow: BigNumber input has precision of ${precision} digits while 16 bit integers fit only 5 digits`);
-      }
-    } else if (outType == nameof<i8>() || outType == nameof<u8>()) {
-      if (precision > 3) {
-       throw new Error (`Integer overflow: BigNumber input has precision of ${precision} digits while 8 bit integers fit only 3 digits`);
-     }
-    }
   }
 
   // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
