@@ -7,16 +7,6 @@ of a `BigFraction` are of type `BigInt`.
 `Fraction` is a generic class for fixed precision arithmetic with integer primitives.
 It no external dependencies, making it lightweight, performant, and memory efficient.
 
-`Fraction` limits:
-Square root and string output operations are handled by 64-bit float operations, and therefore those operations have the
-same precision as 64-bit float operations. 
-More importantly, core arithmetic operations (add, subtract, multiply, divide) involve multiplication of the numerators 
-and denominators to obtain precise results.
-These operations cast the numerator and denominator to 64-bit integers during intermediate operations to prevent integer 
-overflow. 
-Operations on Fraction<i64> and Fraction<u64> are unsafe. 
-Integer overflow does not throw an exception.
-
 ## Features
 
 - Fast arithmetic operations
@@ -31,7 +21,7 @@ Integer overflow does not throw an exception.
 or  
 `yarn add as-fraction`
 
-### Quick start
+### BigFraction: Quick start
 
 ```typescript
 import { BigFraction } from "as-fraction"
@@ -97,6 +87,51 @@ const toBigInt: BigInt = a.toBigInt();
 const toArray: Array<BigInt> = a.toArray();
 ```
 
+### BigFraction: Rounding and Precision
+
+Because some numbers are irrational or have infinite digits, rounding is necessary when converting a fraction to its
+decimal representation. Numbers are rounded to a specific number of digits, which we call 'precision'. For example, the
+number 123.45 has five digits, and therefore has a precision of 5.
+
+By default, decimal output is assigned a maximum precision of 155. When a result of a decimal output operation would
+exceed 155 digits, it is rounded to the best 155 digits according to the default or specified rounding rule. The
+magnitude of a number can still exceed that of a 155 digit integer due to exponential notation.
+
+Decimal output operations accept optional arguments to specify the precision and rounding mode for the result of the
+operation. The default precision and rounding mode can also be changed using static methods.
+
+A precision less than or equal to 0 indicates that the result of a decimal output operation should have exact precision.
+This can cause operations to throw an exception when a result would have infinite digits.
+
+```typescript
+// rounding modes
+export enum Rounding {
+  UP, // Rounding mode to round away from zero.
+  DOWN, // Rounding mode to round towards zero.
+  CEIL, // Rounding mode to round towards positive infinity.
+  FLOOR, // Rounding mode to round towards negative infinity.
+  HALF_UP, // Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
+  HALF_DOWN, // Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round down.
+  HALF_EVEN, // Rounding mode to round towards the "nearest neighbor" unless both neighbors are equidistant, in which case, round towards the even neighbor.
+  NONE, // Rounding mode to assert that the requested operation has an exact result, hence no rounding is necessary.
+}
+```
+```typescript
+import { BigFraction, Rounding } from "as-fraction"
+
+// many methods accept arguments that adjust precision and rounding
+const precision: i32 = 250;
+const rounding: Rounding = Rounding.FLOOR;
+const fraction: BigFraction = new BigFraction(BigInt.from(1), BigInt.from(3));
+const quotient: string = fraction.toNumberString(precision, rounding);
+
+// default precision and rounding can be changed
+BigFraction.DEFAULT_PRECISION = 155;
+BigFraction.DEFAULT_ROUNDING = Rounding.HALF_UP;
+```
+
+### Fraction: Quick start
+
 ```typescript
 import { Fraction } from "as-fraction"
 
@@ -154,48 +189,16 @@ const toArray: Array<T> = a.toArray(); // returns [numerator, denominator]
 const floorDivision: T = a.toInt(); // returns the fraction's generic type (an integer primitive)
 ```
 
-### Rounding and Precision
+### Fraction: Precision and Integer Overflow:
+Core arithmetic operations (add, subtract, multiply, divide) involve multiplication of the numerators
+and denominators to obtain precise results.
+These operations cast the numerator and denominator to 64-bit integers during intermediate operations to prevent integer
+overflow.
+Operations on `Fraction<i64>` and `Fraction<u64>` are unsafe when the integers are greater than 32-bit integer max values.
+Integer overflow does not throw an exception.
 
-Because some numbers are irrational or have infinite digits, rounding is necessary when converting a fraction to its 
-decimal representation. Numbers are rounded to a specific number of digits, which we call 'precision'. For example, the 
-number 123.45 has five digits, and therefore has a precision of 5.
-
-By default, decimal output is assigned a maximum precision of 155. When a result of a decimal output operation would 
-exceed 155 digits, it is rounded to the best 155 digits according to the default or specified rounding rule. The 
-magnitude of a number can still exceed that of a 155 digit integer due to exponential notation.
-
-Decimal output operations accept optional arguments to specify the precision and rounding mode for the result of the 
-operation. The default precision and rounding mode can also be changed using static methods.
-
-A precision less than or equal to 0 indicates that the result of a decimal output operation should have exact precision. 
-This can cause operations to throw an exception when a result would have infinite digits.
-
-```typescript
-// rounding modes
-export enum Rounding {
-  UP, // Rounding mode to round away from zero.
-  DOWN, // Rounding mode to round towards zero.
-  CEIL, // Rounding mode to round towards positive infinity.
-  FLOOR, // Rounding mode to round towards negative infinity.
-  HALF_UP, // Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round up.
-  HALF_DOWN, // Rounding mode to round towards "nearest neighbor" unless both neighbors are equidistant, in which case round down.
-  HALF_EVEN, // Rounding mode to round towards the "nearest neighbor" unless both neighbors are equidistant, in which case, round towards the even neighbor.
-  NONE, // Rounding mode to assert that the requested operation has an exact result, hence no rounding is necessary.
-}
-```
-```typescript
-import { BigFraction, Rounding } from "as-fraction"
-
-// many methods accept arguments that adjust precision and rounding
-const precision: i32 = 250;
-const rounding: Rounding = Rounding.FLOOR;
-const fraction: BigFraction = new BigFraction(BigInt.from(1), BigInt.from(3));
-const quotient: string = fraction.toNumberString(precision, rounding);
-
-// default precision and rounding can be changed
-BigFraction.DEFAULT_PRECISION = 155;
-BigFraction.DEFAULT_ROUNDING = Rounding.HALF_UP;
-```
+Square root and string output operations are handled by 64-bit float operations, and therefore those operations have the
+same precision as 64-bit float operations.
 
 ## Contributing  
 
