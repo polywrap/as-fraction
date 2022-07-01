@@ -8,6 +8,16 @@ describe('Construction', () => {
     expect(frac.toString()).toStrictEqual("[1, 3]");
   });
 
+  it("fromFloat", () => {
+    const shortFloat: f64 = <f64>6 / <f64>4;
+    const frac32 = Fraction.fromFloat(shortFloat);
+    expect(frac32.toNumberString()).toStrictEqual(shortFloat.toString());
+
+    const longFloat: f64 = <f64>1 / <f64>3;
+    const frac64 = Fraction.fromFloat<f64, i64>(longFloat);
+    expect(frac64.toNumberString()).toStrictEqual(longFloat.toString());
+  });
+
   it("generic from", () => {
     const decimalStr: string = "1234.43";
     const float32: f32 = F32.parseFloat(decimalStr);
