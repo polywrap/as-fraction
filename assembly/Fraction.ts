@@ -1,4 +1,4 @@
-export class Fraction<T extends Number> {
+export class Fraction<T extends number> {
   public readonly numerator: T;
   public readonly denominator: T;
 
@@ -21,7 +21,7 @@ export class Fraction<T extends Number> {
    * @param  val the number as {Fraction<T>}, {int[]}, string, or {number}
    * @return the new {Fraction<TOut>} instance
    */
-  static from<U, TOut extends Number = i32>(val: U): Fraction<TOut> {
+  static from<U, TOut extends number = i32>(val: U): Fraction<TOut> {
     if (val instanceof Fraction) {
       if (nameof<TOut>() == nameof(val.numerator)) return val;
       return val.toFraction<TOut>();
@@ -34,7 +34,7 @@ export class Fraction<T extends Number> {
     throw new TypeError("Unsupported generic type " + nameof<U>(val));
   }
 
-  static fromArray<W extends Number>(arr: Array<W>): Fraction<W> {
+  static fromArray<W extends number>(arr: Array<W>): Fraction<W> {
     if (!isInteger<W>(arr[0])) {
       throw new TypeError("Unsupported generic type " + nameof<W>(arr[0]));
     }
@@ -46,14 +46,14 @@ export class Fraction<T extends Number> {
     return new Fraction<W>(arr[0], arr[1]);
   }
 
-  static fromFloat<U extends Number, TOut extends Number = i32>(val: U): Fraction<TOut> {
+  static fromFloat<U extends number, TOut extends number = i32>(val: U): Fraction<TOut> {
     if (!isFloat<U>(val)) {
       throw new TypeError("Unsupported generic type " + nameof<U>(val) + ". Expected f32 or f64.");
     }
     return Fraction.fromString<TOut>(val.toString());
   }
 
-  static fromString<TOut extends Number = i32>(val: string): Fraction<TOut> {
+  static fromString<TOut extends number = i32>(val: string): Fraction<TOut> {
     // number values
     let mantissa: TOut; // mantissa
     let exponent: i32 = 0; // exponent
@@ -143,7 +143,7 @@ export class Fraction<T extends Number> {
     return Fraction.fromFloatParams<TOut>(mantissa, exponent);
   }
   
-  private static fromFloatParams<TOut extends Number>(mantissa: TOut, exponent: i32): Fraction<TOut> {
+  private static fromFloatParams<TOut extends number>(mantissa: TOut, exponent: i32): Fraction<TOut> {
     if (exponent > 0) {
       const scale: TOut = <TOut>U64.parseInt("1".padEnd(1 + exponent, "0"));
       return new Fraction<TOut>(mantissa, <TOut>scale);
@@ -230,7 +230,7 @@ export class Fraction<T extends Number> {
     return this.numerator / this.denominator;
   }
 
-  toFloat<TFloat extends Number = f64>(): TFloat {
+  toFloat<TFloat extends number = f64>(): TFloat {
     if (!isFloat<TFloat>()) {
       throw new TypeError("Unsupported generic type " + nameof<TFloat>() + ". Expected f32 or f64.");
     }
@@ -241,7 +241,7 @@ export class Fraction<T extends Number> {
     return [this.numerator, this.denominator];
   }
 
-  toFraction<W extends Number>(): Fraction<W> {
+  toFraction<W extends number>(): Fraction<W> {
     if (!isInteger<W>()) {
       throw new TypeError("Unsupported generic type " + nameof<W>());
     }
@@ -273,31 +273,31 @@ export class Fraction<T extends Number> {
 
   // COMPARISON OPERATORS //////////////////////////////////////////////////////////////////////////////////////////////
 
-  eq<W extends Number>(other: Fraction<W>): boolean {
+  eq<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) == 0;
   }
 
-  ne<W extends Number>(other: Fraction<W>): boolean {
+  ne<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) != 0;
   }
 
-  lt<W extends Number>(other: Fraction<W>): boolean {
+  lt<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) < 0;
   }
 
-  lte<W extends Number>(other: Fraction<W>): boolean {
+  lte<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) <= 0;
   }
 
-  gt<W extends Number>(other: Fraction<W>): boolean {
+  gt<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) > 0;
   }
 
-  gte<W extends Number>(other: Fraction<W>): boolean {
+  gte<W extends number>(other: Fraction<W>): boolean {
     return this.compareTo(other) >= 0;
   }
 
-  compareTo<W extends Number>(right: Fraction<W>): i32 {
+  compareTo<W extends number>(right: Fraction<W>): i32 {
     if (isSigned<T>() || isSigned<W>()) {
       const leftIsNeg: boolean = this.isNegative;
       const rightIsNeg: boolean = right.isNegative;
@@ -319,7 +319,7 @@ export class Fraction<T extends Number> {
     return 0;
   }
 
-  magCompareTo<W extends Number>(right: Fraction<W>): i32 {
+  magCompareTo<W extends number>(right: Fraction<W>): i32 {
     const a: u64 = <u64>abs(this.numerator) * <u64>abs(right.denominator);
     const b: u64 = <u64>abs(right.numerator) * <u64>abs(this.denominator);
     if (a > b) return 1;
@@ -425,47 +425,47 @@ export class Fraction<T extends Number> {
 
   // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  static eq<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static eq<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.eq(right);
   }
 
-  static ne<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static ne<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.ne(right);
   }
 
-  static lt<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static lt<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.lt(right);
   }
 
-  static lte<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static lte<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.lte(right);
   }
 
-  static gt<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static gt<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.gt(right);
   }
 
-  static gte<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
+  static gte<W extends number, V extends number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.gte(right);
   }
 
-  static add<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+  static add<W extends number, U>(left: Fraction<W>, right: U): Fraction<W> {
     return left.add<U>(right);
   }
 
-  static sub<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+  static sub<W extends number, U>(left: Fraction<W>, right: U): Fraction<W> {
     return left.sub<U>(right);
   }
 
-  static mul<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+  static mul<W extends number, U>(left: Fraction<W>, right: U): Fraction<W> {
     return left.mul<U>(right);
   }
 
-  static div<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+  static div<W extends number, U>(left: Fraction<W>, right: U): Fraction<W> {
     return left.div<U>(right);
   }
 
-  static pow<W extends Number>(base: Fraction<W>, k: i32): Fraction<W> {
+  static pow<W extends number>(base: Fraction<W>, k: i32): Fraction<W> {
     return base.pow(k);
   }
 }

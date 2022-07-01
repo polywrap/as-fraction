@@ -93,7 +93,7 @@ export class BigFraction {
     return BigFraction.fromBigNumber(BigNumber.fromString(val, 0));
   }
 
-  static fromFraction<T extends Number>(val: Fraction<T>): BigFraction {
+  static fromFraction<T extends number>(val: Fraction<T>): BigFraction {
     return new BigFraction(BigInt.from(val.numerator), BigInt.from(val.denominator));
   }
 
