@@ -1,24 +1,14 @@
-import { BigInt } from "as-bigint";
-import { BigNumber, Rounding } from "as-bignumber";
-
-export { Rounding } from "as-bignumber";
-
-export class Fraction {
-  public readonly numerator: BigInt;
-  public readonly denominator: BigInt;
-
-  // 155, the number of digits in the maximum value of a 512 bit integer
-  public static DEFAULT_PRECISION: i32 = 155;
-  public static DEFAULT_ROUNDING: Rounding = Rounding.HALF_UP;
-  public static readonly MAX_POWER: i32 = 999999999;
-
-  public static readonly ONE: Fraction = new Fraction(BigInt.ONE);
-  public static readonly HALF: Fraction = new Fraction(BigInt.ONE, BigInt.fromUInt16(2));
+export class Fraction<T extends Number> {
+  public readonly numerator: T;
+  public readonly denominator: T;
 
   // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(numerator: BigInt, denominator: BigInt = BigInt.ONE) {
-    if (denominator.isZero()) {
+  constructor(numerator: T, denominator: T) {
+    if (!isInteger<T>(denominator)) {
+      throw new Error("Fraction numerator and denominator must be integers");
+    }
+    if (denominator == 0) {
       throw new Error("Divide by zero");
     }
     this.numerator = numerator;
@@ -26,405 +16,456 @@ export class Fraction {
   }
 
   /**
-   * Returns a new {Fraction} instance from generic type {T}.
+   * Returns a new {Fraction} instance from generic type {TArg}.
    *
-   * @param  val the number as {BigNumber}, {BigInt}, {BigInt[]}, string, or {number}
-   * @return BigNumber the new {Fraction} instance
+   * @param  val the number as {Fraction<T>}, {int[]}, string, or {number}
+   * @return the new {Fraction<TOut>} instance
    */
-  static from<T>(val: T): Fraction {
-    if (val instanceof Fraction) return val;
-    // @ts-ignore
-    if (val instanceof Array) return Fraction.fromArray(val);
-    // @ts-ignore
-    if (val instanceof BigNumber) return Fraction.fromBigNumber(val);
-    // @ts-ignore
-    if (val instanceof string) return Fraction.fromString(val);
-    // @ts-ignore
-    if (val instanceof BigInt) return new Fraction(val);
-    // @ts-ignore
-    if (val instanceof f32) return Fraction.fromBigNumber(BigNumber.fromFloat64(<f64>val));
-    // @ts-ignore
-    if (val instanceof f64) return Fraction.fromBigNumber(BigNumber.fromFloat64(val));
-    // @ts-ignore
-    if (val instanceof i8) return new Fraction(BigInt.fromInt16(<i16>val));
-    // @ts-ignore
-    if (val instanceof u8) return new Fraction(BigInt.fromUInt16(<u16>val));
-    // @ts-ignore
-    if (val instanceof i16) return new Fraction(BigInt.fromInt16(val));
-    // @ts-ignore
-    if (val instanceof u16) return new Fraction(BigInt.fromUInt16(val));
-    // @ts-ignore
-    if (val instanceof i32) return new Fraction(BigInt.fromInt32(val));
-    // @ts-ignore
-    if (val instanceof u32) return new Fraction(BigInt.fromUInt32(val));
-    // @ts-ignore
-    if (val instanceof i64) return new Fraction(BigInt.fromInt64(val));
-    // @ts-ignore
-    if (val instanceof u64) return new Fraction(BigInt.fromUInt64(val));
+  static from<U, TOut extends Number = i32>(val: U): Fraction<TOut> {
+    if (val instanceof Fraction) {
+      if (nameof<TOut>() == nameof(val.numerator)) return val;
+      return val.toFraction<TOut>();
+    }
+    if (isArray<U>(val)) return this.fromArray(val);
+    if (isString<U>(val)) return this.fromString<TOut>(val);
+    if (isFloat<U>(val)) return this.fromFloat<U, TOut>(val);
+    if (isInteger<U>(val)) return new Fraction<TOut>(<TOut>val, <TOut>1);
 
-    throw new TypeError("Unsupported generic type " + nameof<T>(val));
+    throw new TypeError("Unsupported generic type " + nameof<U>(val));
   }
 
-  static fromArray<TInt>(arr: TInt[]): Fraction {
+  static fromArray<W extends Number>(arr: Array<W>): Fraction<W> {
+    if (!isInteger<W>(arr[0])) {
+      throw new TypeError("Unsupported generic type " + nameof<W>(arr[0]));
+    }
     if (arr.length != 2) {
       throw new Error(
-          "Unexpected length: expected an array of length 2 in the form [numerator, denominator]"
+        "Unexpected length: expected an array of length 2 in the form [numerator, denominator]"
       );
     }
-    return new Fraction(BigInt.from(arr[0]), BigInt.from(arr[1]));
+    return new Fraction<W>(arr[0], arr[1]);
   }
 
-  static fromBigNumber(val: BigNumber): Fraction {
-    if (val.e > 0) {
-      const scale = BigInt.fromString("1".padEnd(1 + val.e, "0"));
-      return new Fraction(val.m.copy(), scale);
-    } else if (val.e < 0) {
-      const scale = BigInt.fromString("1".padEnd(1 - val.e, "0"));
-      return new Fraction(val.m.mul(scale));
+  static fromFloat<U extends Number, TOut extends Number = i32>(val: U): Fraction<TOut> {
+    if (!isFloat<U>(val)) {
+      throw new TypeError("Unsupported generic type " + nameof<U>(val) + ". Expected f32 or f64.");
+    }
+    return Fraction.fromString<TOut>(val.toString());
+  }
+
+  static fromString<TOut extends Number = i32>(val: string): Fraction<TOut> {
+    // number values
+    let mantissa: TOut; // mantissa
+    let exponent: i32 = 0; // exponent
+    let p: i32 = 0; // precision
+
+    // values for parsing string
+    let offset: i32 = 0;
+    let len: i32 = val.length;
+
+    // handle the sign
+    let isNeg: boolean = false;
+    if (val.charAt(offset) == '-') {
+      if (!isSigned<TOut>()) {
+        throw new Error(`Cannot construct Fraction<${nameof<TOut>()}> from negative decimal string ${val}`)
+      }
+      isNeg = true;
+      offset++;
+      len--;
+    } else if (val.charAt(offset) == '+') { // leading + allowed
+      offset++;
+      len--;
+    }
+
+    let dot: boolean = false; // decimal point
+    let idx: i32 = 0;
+    let codes: i32[] = [];
+    for (; len > 0; offset++, len--) {
+      const char: i32 = val.charCodeAt(offset);
+
+      // char is digit
+      if (char >= 48 && char <= 57) {
+        // char is 0
+        if (char == 48) {
+          // char is first leading zero
+          if (p == 0) {
+            codes[idx] = char;
+            p = 1;
+            // char is a zero that follows another digit
+          } else if (idx != 0) {
+            codes[idx++] = char;
+            ++p;
+          }
+          // char is non-zero digit
+        } else {
+          // increment precision if char is not redundant leading zero
+          if (p != 1 || idx != 0) {
+            ++p;
+          }
+          codes[idx++] = char;
+        }
+        if (dot) {
+          ++exponent;
+        }
+        continue;
+      }
+
+      // char is decimal point
+      if (char == 46) {
+        if (dot) {
+          throw new Error("Input string contains more than one decimal point.");
+        }
+        dot = true;
+        continue;
+      }
+
+      // exponential notation mark expected
+      if (char != 69 && char != 101) {
+        throw new Error("Input string contains a character that is not a digit, decimal point, or \"e\" notation exponential mark.");
+      }
+      const eMark: i64 = Fraction.parseExp(val, offset, len);
+      if (eMark != 0) {
+        exponent = Fraction.overflowGuard(<i64>exponent - eMark);
+      }
+      break;
+    }
+
+    // Check if digits
+    if (p == 0) {
+      throw new Error("No digits found.");
+    }
+
+    mantissa = <TOut>(isNeg ? I64.parseInt("-" + String.fromCharCodes(codes))  : U64.parseInt(String.fromCharCodes(codes)));
+    if (mantissa == 0) {
+      return new Fraction<TOut>(<TOut>0, <TOut>1);
+    }
+
+    return Fraction.fromFloatParams<TOut>(mantissa, exponent);
+  }
+  
+  private static fromFloatParams<TOut extends Number>(mantissa: TOut, exponent: i32): Fraction<TOut> {
+    if (exponent > 0) {
+      const scale: TOut = <TOut>U64.parseInt("1".padEnd(1 + exponent, "0"));
+      return new Fraction<TOut>(mantissa, <TOut>scale);
+    } else if (exponent < 0) {
+      const scale: TOut = <TOut>U64.parseInt("1".padEnd(1 - exponent, "0"));
+      return new Fraction<TOut>(mantissa * scale, <TOut>1);
     } else {
-      return new Fraction(val.m.copy());
+      return new Fraction<TOut>(mantissa, <TOut>1);
     }
   }
 
-  static fromBigInt(val: BigInt): Fraction {
-    return new Fraction(val.copy());
+  private static parseExp(val: string, offset: i32, len: i32): i32 {
+    offset++;
+    let char: string = val.charAt(offset);
+    len--;
+
+    const negexp: boolean = char == '-';
+    // sign
+    if (negexp || char == '+') {
+      offset++;
+      char = val.charAt(offset);
+      len--;
+    }
+
+    if (len <= 0) {
+      throw new Error("No digits following exponential mark.");
+    }
+    // skip leading zeros in the exponent
+    while (len > 10 && char == '0') {
+      offset++;
+      char = val.charAt(offset);
+      len--;
+    }
+    if (len > 10) {
+      throw new Error("Too many nonzero exponent digits.");
+    }
+
+    let exp: i64 = 0;
+    for (;; len--) {
+      const code = char.charCodeAt(0);
+      if (code < 48 || code > 57) {
+        throw new Error("Encountered non-digit character following exponential mark.");
+      }
+      exp = exp * 10 + (code - 48);
+      if (len == 1) {
+        break; // that was final character
+      }
+      char = val.charAt(++offset);
+    }
+
+    // apply sign
+    if (negexp) {
+      exp = -exp;
+    }
+    return Fraction.overflowGuard(exp, false);
   }
-  
-  static fromString(val: string): Fraction {
-    return Fraction.fromBigNumber(BigNumber.fromString(val, 0))
+
+  private static overflowGuard(k: i64, isZero: boolean = false): i32 {
+    let safeInt: i32 = <i32>k;
+    if (<i64>safeInt != k) {
+      if (!isZero) {
+        throw new Error("Integer overflow");
+      }
+      safeInt = k > I32.MAX_VALUE ? I32.MAX_VALUE : I32.MIN_VALUE;
+    }
+    return safeInt;
   }
 
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   toString(): string {
-    return `[${this.numerator.toString()}, ${this.denominator.toString()}]`
+    return `[${this.numerator}, ${this.denominator}]`
   }
 
-  toNumberString(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): string {
-    return BigNumber.fromFraction(
-        this.numerator,
-        this.denominator,
-        precision,
-        rounding
-    ).toString();
-  }
-
-  toSignificant(
-      digits: i32,
-      rounding: Rounding = Rounding.HALF_UP
-  ): string {
-    if (digits < 0) {
-      return "0";
+  toNumberString(): string {
+    if (this.isInteger || this.numerator == 0) {
+      return this.toInt().toString();
     }
-    return BigNumber.fromFraction(
-        this.numerator,
-        this.denominator,
-        Fraction.DEFAULT_PRECISION,
-        rounding
-    ).toSignificant(digits, rounding);
-  }
-
-  toFixed(
-      places: i32,
-      rounding: Rounding = Rounding.HALF_UP
-  ): string {
-    return BigNumber.fromFraction(
-        this.numerator,
-        this.denominator,
-        Fraction.DEFAULT_PRECISION,
-        rounding
-    ).toFixed(places, rounding);
-  }
-
-  toBigNumber(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {
-    const numerator: BigNumber = BigNumber.from(this.numerator);
-    const denominator: BigNumber = BigNumber.from(this.denominator);
-    return numerator.div(denominator, precision, rounding);
+    return this.toFloat<f64>().toString();
   }
 
   // performs floor division
-  toBigInt(): BigInt {
-    return this.numerator.div(this.denominator);
+  toInt(): T {
+    return this.numerator / this.denominator;
   }
 
-  toArray(): BigInt[] {
-    return [this.numerator.copy(), this.denominator.copy()];
+  toFloat<TFloat extends Number = f64>(): TFloat {
+    if (!isFloat<TFloat>()) {
+      throw new TypeError("Unsupported generic type " + nameof<TFloat>() + ". Expected f32 or f64.");
+    }
+    return <TFloat>this.numerator / <TFloat>this.denominator;
   }
 
-  quotient(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {
-    return this.toBigNumber(precision, rounding);
+  toArray(): Array<T> {
+    return [this.numerator, this.denominator];
   }
 
-  // O(N)
-  copy(): Fraction {
-    return new Fraction(this.numerator.copy(), this.denominator.copy());
+  toFraction<W extends Number>(): Fraction<W> {
+    if (!isInteger<W>()) {
+      throw new TypeError("Unsupported generic type " + nameof<W>());
+    }
+    return new Fraction<W>(<W>this.numerator, <W>this.denominator);
   }
 
-  // O(N)
-  opposite(): Fraction  {
-    return new Fraction(this.numerator.opposite(), this.denominator.copy());
+  quotient(): f64 {
+    return <f64>this.numerator / <f64>this.denominator;
   }
 
-  // O(N)
-  abs(): Fraction  {
-    return new Fraction(this.numerator.abs(), this.denominator.abs());
+  copy(): Fraction<T> {
+    return new Fraction<T>(this.numerator, this.denominator);
   }
 
-  reciprocal(): Fraction {
-    return new Fraction(this.denominator.copy(), this.numerator.copy());
+  opposite(): Fraction<T> {
+    if (!isSigned<T>()) {
+      throw new Error("Cannot take opposite of Fraction with unsigned integers")
+    }
+    return new Fraction<T>(-1 * this.numerator, this.denominator);
+  }
+
+  abs(): Fraction<T> {
+    return new Fraction<T>(abs<T>(this.numerator), abs<T>(this.denominator));
+  }
+
+  reciprocal(): Fraction<T> {
+    return new Fraction(this.denominator, this.numerator);
   }
 
   // COMPARISON OPERATORS //////////////////////////////////////////////////////////////////////////////////////////////
 
-  eq<T>(other: T): boolean {
-    return this.compareTo(Fraction.from(other)) == 0;
+  eq<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) == 0;
   }
 
-  ne<T>(other: T): boolean {
-    return !this.eq(Fraction.from(other));
+  ne<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) != 0;
   }
 
-  lt<T>(other: T): boolean {
-    return this.compareTo(Fraction.from(other)) < 0;
+  lt<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) < 0;
   }
 
-  lte<T>(other: T): boolean {
-    return this.compareTo(Fraction.from(other)) <= 0;
+  lte<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) <= 0;
   }
 
-  gt<T>(other: T): boolean {
-    return this.compareTo(Fraction.from(other)) > 0;
+  gt<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) > 0;
   }
 
-  gte<T>(other: T): boolean {
-    return this.compareTo(Fraction.from(other)) >= 0;
+  gte<W extends Number>(other: Fraction<W>): boolean {
+    return this.compareTo(other) >= 0;
   }
 
-  compareTo(other: Fraction): i32 {
-    const leftIsNeg: boolean = this.isNegative;
-    const rightIsNeg: boolean = other.isNegative;
-    if (leftIsNeg && !rightIsNeg) {
-      return -1;
-    } else if (!leftIsNeg && rightIsNeg) {
-      return 1;
+  compareTo<W extends Number>(right: Fraction<W>): i32 {
+    if (isSigned<T>() || isSigned<W>()) {
+      const leftIsNeg: boolean = this.isNegative;
+      const rightIsNeg: boolean = right.isNegative;
+      if (leftIsNeg && !rightIsNeg) {
+        return -1;
+      } else if (!leftIsNeg && rightIsNeg) {
+        return 1;
+      }
     }
-    const a = BigInt.mul(this.numerator, other.denominator);
-    const b = BigInt.mul(other.numerator, this.denominator);
-    return leftIsNeg ? b.magCompareTo(a) : a.magCompareTo(b);
+    const a: u64 = <u64>abs(this.numerator) * <u64>abs(right.denominator);
+    const b: u64 = <u64>abs(right.numerator) * <u64>abs(this.denominator);
+    if (this.isNegative) {
+      if (b > a) return 1;
+      if (b < a) return -1;
+      return 0;
+    }
+    if (a > b) return 1;
+    if (a < b) return -1;
+    return 0;
   }
 
-  magCompareTo(other: Fraction): i32 {
-    const left = BigInt.mul(this.numerator, other.denominator);
-    const right = BigInt.mul(other.numerator, this.denominator);
-    return left.magCompareTo(right);
+  magCompareTo<W extends Number>(right: Fraction<W>): i32 {
+    const a: u64 = <u64>abs(this.numerator) * <u64>abs(right.denominator);
+    const b: u64 = <u64>abs(right.numerator) * <u64>abs(this.denominator);
+    if (a > b) return 1;
+    if (a < b) return -1;
+    return 0;
   }
 
   // ARITHMETIC ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  add<T>(other: T): Fraction {
-    const addend = Fraction.from(other);
-    if (this.denominator.eq(addend.denominator)) {
-      const numeratorSum: BigInt = BigInt.add(this.numerator, addend.numerator);
-      return new Fraction(numeratorSum, this.denominator);
+  add<U>(other: U): Fraction<T> {
+    const addend: Fraction<T> = Fraction.from<U, T>(other);
+    if (this.denominator == addend.denominator) {
+      return new Fraction<T>(this.numerator + addend.numerator, this.denominator);
     }
-    return new Fraction(
-        BigInt.add(
-            BigInt.mul(this.numerator, addend.denominator),
-            BigInt.mul(addend.numerator, this.denominator)
-        ),
-        BigInt.mul(this.denominator, addend.denominator)
-    );
-  }
-
-  sub<T>(other: T): Fraction {
-    const subtrahend: Fraction = Fraction.from(other);
-    if (BigInt.eq(this.denominator, subtrahend.denominator)) {
-      const numeratorSub: BigInt = BigInt.sub(this.numerator, subtrahend.numerator);
-      return new Fraction(numeratorSub, this.denominator);
+    if (isSigned<T>()) {
+      const a: i64 = <i64>this.numerator * addend.denominator;
+      const b: i64 = <i64>addend.numerator * this.denominator;
+      const c: T = this.denominator * addend.denominator;
+      return new Fraction<T>(<T>(a + b), c);
     }
-    return new Fraction(
-        BigInt.sub(
-            BigInt.mul(this.numerator, subtrahend.denominator),
-            BigInt.mul(subtrahend.numerator, this.denominator)
-        ),
-        BigInt.mul(this.denominator, subtrahend.denominator)
+    const a: T = this.numerator * addend.denominator;
+    const b: T = addend.numerator * this.denominator;
+    const c: T = this.denominator * addend.denominator;
+    return new Fraction<T>(a + b, c);
+  }
+
+  sub<U>(other: U): Fraction<T> {
+    const subtrahend: Fraction<T> = Fraction.from<U, T>(other);
+    if (this.denominator == subtrahend.denominator) {
+      return new Fraction<T>(this.numerator - subtrahend.numerator, this.denominator);
+    }
+    if (isSigned<T>()) {
+      const a: i64 = <i64>this.numerator * subtrahend.denominator;
+      const b: i64 = <i64>subtrahend.numerator * this.denominator;
+      const c: T = this.denominator * subtrahend.denominator;
+      return new Fraction<T>(<T>(a - b), c);
+    }
+    const a: u64 = <u64>this.numerator * subtrahend.denominator;
+    const b: u64 = <u64>subtrahend.numerator * this.denominator;
+    const c: T = this.denominator * subtrahend.denominator;
+    return new Fraction<T>(<T>(a - b), c);
+  }
+
+  mul<U>(other: U): Fraction<T> {
+    const multiplier: Fraction<T> = Fraction.from<U, T>(other);
+    return new Fraction<T>(
+      this.numerator * multiplier.numerator,
+      this.denominator * multiplier.denominator
     );
   }
 
-  mul<T>(other: T): Fraction {
-    const multiplier: Fraction = Fraction.from(other);
-    return new Fraction(
-        BigInt.mul(this.numerator, multiplier.numerator),
-        BigInt.mul(this.denominator, multiplier.denominator)
-    );
-  }
-
-  square(): Fraction {
-    return new Fraction(
-        this.numerator.square(),
-        this.denominator.square()
+  square(): Fraction<T> {
+    return new Fraction<T>(
+      this.numerator * this.numerator,
+      this.denominator * this.denominator
     );
   }
 
   /**
    * Divides two Fractions and rounds result
    */
-  div<T>(other: T): Fraction {
-    const divisor: Fraction = Fraction.from(other);
-    if (divisor.numerator.isZero()) {
+  div<U>(other: U): Fraction<T> {
+    const divisor: Fraction<T> = Fraction.from<U, T>(other);
+    if (divisor.numerator == 0) {
       throw new Error("Divide by zero");
     }
-    return new Fraction(
-        BigInt.mul(this.numerator, divisor.denominator),
-        BigInt.mul(this.denominator, divisor.numerator)
+    return new Fraction<T>(
+      this.numerator * divisor.denominator,
+      this.denominator * divisor.numerator
     );
   }
 
-  sqrt(): Fraction {
-    if (this.isNegative)
+  sqrt(): Fraction<T> {
+    if (this.isNegative) {
       throw new RangeError("Square root of negative numbers is not supported");
-    if (this.isZero()) {
+    }
+    if (this.numerator == 0) {
       return this.copy();
     }
-    return Fraction.fromBigNumber(this.toBigNumber().sqrt());
+    return Fraction.fromFloat<f64, T>(sqrt<f64>(<f64>this.numerator / <f64>this.denominator));
   }
 
-  pow(k: i32): Fraction {
-    if (k < -Fraction.MAX_POWER || k > Fraction.MAX_POWER) {
-      throw new Error(`Power argument out of bounds [-${Fraction.MAX_POWER}, ${Fraction.MAX_POWER}]: ${k}`);
-    }
+  pow(k: i32): Fraction<T> {
     if (k < 0) {
-      return new Fraction(this.denominator.pow(k), this.numerator.pow(k));
+      return new Fraction<T>(this.denominator ** k, this.numerator ** k);
     }
-    return new Fraction(this.numerator.pow(k), this.denominator.pow(k));
+    return new Fraction<T>(this.numerator ** k, this.denominator ** k);
   }
 
   // UTILITIES /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   get isNegative(): boolean {
-    return this.numerator.isNegative != this.denominator.isNegative;
+    return this.numerator < 0 != this.denominator < 0;
   }
 
   isZero(): boolean {
-    return this.numerator.isZero();
+    return this.numerator == 0;
   }
 
   get isInteger(): boolean {
-    return this.toBigNumber().isInteger;
+    return abs<T>(this.numerator) >= abs<T>(this.denominator) && (this.numerator % this.denominator == 0)
   }
 
   // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-  static eq<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.eq(right);
-  }
-
-  @operator("==")
-  private static eqOp(left: Fraction, right: Fraction): boolean {
+  static eq<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.eq(right);
   }
 
-  static ne<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.ne(right);
-  }
-
-  @operator("!=")
-  private static neOp(left: Fraction, right: Fraction): boolean {
+  static ne<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.ne(right);
   }
 
-  static lt<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.lt(right);
-  }
-
-  @operator("<")
-  private static ltOp(left: Fraction, right: Fraction): boolean {
+  static lt<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.lt(right);
   }
 
-  static lte<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.lte(right);
-  }
-
-  @operator("<=")
-  private static lteOp(left: Fraction, right: Fraction): boolean {
+  static lte<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.lte(right);
   }
 
-  static gt<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.gt(right);
-  }
-
-  @operator(">")
-  private static gtOp(left: Fraction, right: Fraction): boolean {
+  static gt<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.gt(right);
   }
 
-  static gte<T, U>(left: T, right: U): boolean {
-    const a: Fraction = Fraction.from(left);
-    return a.gte(right);
-  }
-
-  @operator(">=")
-  private static gteOp(left: Fraction, right: Fraction): boolean {
+  static gte<W extends Number, V extends Number>(left: Fraction<W>, right: Fraction<V>): boolean {
     return left.gte(right);
   }
 
-  static add<T, U>(left: T, right: U): Fraction {
-    const a: Fraction = Fraction.from(left);
-    return a.add(right);
+  static add<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+    return left.add<U>(right);
   }
 
-  @operator("+")
-  private static addOp(left: Fraction, right: Fraction): Fraction {
-    return left.add(right);
+  static sub<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+    return left.sub<U>(right);
   }
 
-  static sub<T, U>(left: T, right: U): Fraction {
-    const a: Fraction = Fraction.from(left);
-    return a.sub(right);
+  static mul<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+    return left.mul<U>(right);
   }
 
-  @operator("-")
-  private static subOp(left: Fraction, right: Fraction): Fraction {
-    return left.sub(right);
+  static div<W extends Number, U>(left: Fraction<W>, right: U): Fraction<W> {
+    return left.div<U>(right);
   }
 
-  static mul<T, U>(left: T, right: U): Fraction {
-    const a: Fraction = Fraction.from(left);
-    return a.mul(right);
-  }
-
-  @operator("*")
-  private static mulOp(left: Fraction, right: Fraction): Fraction {
-    return left.mul(right);
-  }
-
-  static div<T, U>(left: T, right: U): Fraction {
-    const a: Fraction = Fraction.from(left);
-    return a.div(right);
-  }
-
-  @operator("/")
-  static divOp(left: Fraction, right: Fraction): Fraction {
-    return left.div(right);
-  }
-
-  static pow<T>(base: T, k: i32): Fraction {
-    const x: Fraction = Fraction.from(base);
-    return x.pow(k);
-  }
-
-  @operator("**")
-  private static powOp(left: Fraction, right: Fraction): Fraction {
-    if (!right.isInteger) {
-      throw new Error("Exponent must be an integer value");
-    }
-    return left.pow(right.toBigInt().toInt32());
+  static pow<W extends Number>(base: Fraction<W>, k: i32): Fraction<W> {
+    return base.pow(k);
   }
 }

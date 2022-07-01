@@ -1,13 +1,13 @@
 {
   "name": "as-fraction",
-  "description": "An AssemblyScript class for math with Fraction representations of arbitrary precision numbers",
+  "description": "An AssemblyScript class for math with fraction representations of fixed and arbitrary precision numbers",
   "license": "MIT",
   "private": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/polywrap/as-fraction.git"
   },
-  "version": "0.2.0",
+  "version": "0.3.0",
   "types": "assembly/index.ts",
   "releaseFiles": [
     "assembly/",
@@ -31,8 +31,8 @@
     "lint:ci": "yarn eslint"
   },
   "dependencies": {
-    "as-bigint": "^0.5.1",
-    "as-bignumber": "^0.1.1"
+    "as-bigint": "^0.5.3",
+    "as-bignumber": "^0.2.0"
   },
   "devDependencies": {
     "@as-pect/cli": "6.2.4",

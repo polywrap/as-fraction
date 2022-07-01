@@ -1,14 +1,14 @@
-import { Fraction } from "../Fraction";
+import { BigFraction } from "../../BigFraction";
 import {BigInt} from "as-bigint";
 
 describe('comparison operators', () => {
 
     it("positive fractions", () => {
-        let a: Fraction = new Fraction(
+        let a: BigFraction = new BigFraction(
             BigInt.fromUInt16(1),
             BigInt.fromUInt16(10)
         );
-        let b: Fraction = new Fraction(
+        let b: BigFraction = new BigFraction(
             BigInt.fromUInt16(4),
             BigInt.fromUInt16(12)
         );
@@ -20,11 +20,11 @@ describe('comparison operators', () => {
         expect(a.compareTo(b)).toBe(-1);
         expect(a.magCompareTo(b)).toBe(-1);
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(1),
             BigInt.fromUInt16(3)
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4),
             BigInt.fromUInt16(12)
         );
@@ -37,11 +37,11 @@ describe('comparison operators', () => {
         expect(a.magCompareTo(b)).toBe(0);
 
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(5),
             BigInt.fromUInt16(12)
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4),
             BigInt.fromUInt16(12)
         );
@@ -55,11 +55,11 @@ describe('comparison operators', () => {
     });
 
     it("positive fractions with negative numerator and denominator", () => {
-        let a: Fraction = new Fraction(
+        let a: BigFraction = new BigFraction(
             BigInt.fromUInt16(1).opposite(),
             BigInt.fromUInt16(10).opposite()
         );
-        let b: Fraction = new Fraction(
+        let b: BigFraction = new BigFraction(
             BigInt.fromUInt16(4),
             BigInt.fromUInt16(12)
         );
@@ -71,11 +71,11 @@ describe('comparison operators', () => {
         expect(a.compareTo(b)).toBe(-1);
         expect(a.magCompareTo(b)).toBe(-1);
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(1),
             BigInt.fromUInt16(10)
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4).opposite(),
             BigInt.fromUInt16(12).opposite()
         );
@@ -88,11 +88,11 @@ describe('comparison operators', () => {
         expect(a.magCompareTo(b)).toBe(-1);
 
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(1).opposite(),
             BigInt.fromUInt16(10).opposite()
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4).opposite(),
             BigInt.fromUInt16(12).opposite()
         );
@@ -106,11 +106,11 @@ describe('comparison operators', () => {
     });
 
     it("negative fractions", () => {
-        let a: Fraction = new Fraction(
+        let a: BigFraction = new BigFraction(
             BigInt.fromUInt16(1),
             BigInt.fromUInt16(10)
         );
-        let b: Fraction = new Fraction(
+        let b: BigFraction = new BigFraction(
             BigInt.fromUInt16(4).opposite(),
             BigInt.fromUInt16(12)
         );
@@ -122,11 +122,11 @@ describe('comparison operators', () => {
         expect(a.compareTo(b)).toBe(1);
         expect(a.magCompareTo(b)).toBe(-1);
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(1).opposite(),
             BigInt.fromUInt16(3)
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4).opposite(),
             BigInt.fromUInt16(12)
         );
@@ -139,11 +139,11 @@ describe('comparison operators', () => {
         expect(a.magCompareTo(b)).toBe(0);
 
 
-        a = new Fraction(
+        a = new BigFraction(
             BigInt.fromUInt16(5),
             BigInt.fromUInt16(12).opposite()
         );
-        b = new Fraction(
+        b = new BigFraction(
             BigInt.fromUInt16(4),
             BigInt.fromUInt16(12).opposite()
         );

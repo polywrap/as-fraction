@@ -1,4 +1,4 @@
-import { Fraction, Rounding } from "../Fraction";
+import { BigFraction, Rounding } from "../../";
 
 describe('String operations', () => {
 
@@ -16,61 +16,61 @@ describe('String operations', () => {
       ]
       for (let i = 0; i < arr.length; i++) {
         const str: string = arr[i];
-        const frac: Fraction = Fraction.fromString(str);
+        const frac: BigFraction = BigFraction.fromString(str);
         expect(frac.toNumberString()).toStrictEqual(str);
       }
 
       // atypical decimal number representations
-      expect(Fraction.fromString(".1234").toNumberString()).toStrictEqual("0.1234");
-      expect(Fraction.fromString("-.1234").toNumberString()).toStrictEqual("-0.1234");
-      expect(Fraction.fromString("+1234.42").toNumberString()).toStrictEqual("1234.42");
+      expect(BigFraction.fromString(".1234").toNumberString()).toStrictEqual("0.1234");
+      expect(BigFraction.fromString("-.1234").toNumberString()).toStrictEqual("-0.1234");
+      expect(BigFraction.fromString("+1234.42").toNumberString()).toStrictEqual("1234.42");
 
       // integer numbers
-      expect(Fraction.fromString("1234.0").toNumberString()).toStrictEqual("1234");
-      expect(Fraction.fromString("1234.",).toNumberString()).toStrictEqual("1234");
-      expect(Fraction.fromString("1234",).toNumberString()).toStrictEqual("1234");
-      expect(Fraction.fromString("-1234.0").toNumberString()).toStrictEqual("-1234");
-      expect(Fraction.fromString("-1234.",).toNumberString()).toStrictEqual("-1234");
-      expect(Fraction.fromString("-1234",).toNumberString()).toStrictEqual("-1234");
+      expect(BigFraction.fromString("1234.0").toNumberString()).toStrictEqual("1234");
+      expect(BigFraction.fromString("1234.",).toNumberString()).toStrictEqual("1234");
+      expect(BigFraction.fromString("1234",).toNumberString()).toStrictEqual("1234");
+      expect(BigFraction.fromString("-1234.0").toNumberString()).toStrictEqual("-1234");
+      expect(BigFraction.fromString("-1234.",).toNumberString()).toStrictEqual("-1234");
+      expect(BigFraction.fromString("-1234",).toNumberString()).toStrictEqual("-1234");
     });
 
     it("Accepts input strings in E notation", () => {
       // positive nubmers with E notation
-      expect(Fraction.fromString("1234E5").toNumberString()).toStrictEqual("123400000");
-      expect(Fraction.fromString("1234.42E5").toNumberString()).toStrictEqual("123442000");
-      expect(Fraction.fromString("1234E-5").toNumberString()).toStrictEqual("0.01234");
-      expect(Fraction.fromString("1234.42E-5").toNumberString()).toStrictEqual("0.0123442");
+      expect(BigFraction.fromString("1234E5").toNumberString()).toStrictEqual("123400000");
+      expect(BigFraction.fromString("1234.42E5").toNumberString()).toStrictEqual("123442000");
+      expect(BigFraction.fromString("1234E-5").toNumberString()).toStrictEqual("0.01234");
+      expect(BigFraction.fromString("1234.42E-5").toNumberString()).toStrictEqual("0.0123442");
 
       // negative nubmers with E notation
-      expect(Fraction.fromString("-1234E5").toNumberString()).toStrictEqual("-123400000");
-      expect(Fraction.fromString("-1234.42E5").toNumberString()).toStrictEqual("-123442000");
-      expect(Fraction.fromString("-1234E-5").toNumberString()).toStrictEqual("-0.01234");
-      expect(Fraction.fromString("-1234.42E-5").toNumberString()).toStrictEqual("-0.0123442");
+      expect(BigFraction.fromString("-1234E5").toNumberString()).toStrictEqual("-123400000");
+      expect(BigFraction.fromString("-1234.42E5").toNumberString()).toStrictEqual("-123442000");
+      expect(BigFraction.fromString("-1234E-5").toNumberString()).toStrictEqual("-0.01234");
+      expect(BigFraction.fromString("-1234.42E-5").toNumberString()).toStrictEqual("-0.0123442");
     });
 
     it("Accepts input strings with leading or trailing zeros", () => {
       // positive numbers
-      expect(Fraction.fromString("0001234.42").toNumberString()).toStrictEqual("1234.42");
-      expect(Fraction.fromString("00.1234").toNumberString()).toStrictEqual("0.1234");
-      expect(Fraction.fromString("00000123400000").toNumberString()).toStrictEqual("123400000");
-      expect(Fraction.fromString("00.123400").toNumberString()).toStrictEqual("0.1234");
+      expect(BigFraction.fromString("0001234.42").toNumberString()).toStrictEqual("1234.42");
+      expect(BigFraction.fromString("00.1234").toNumberString()).toStrictEqual("0.1234");
+      expect(BigFraction.fromString("00000123400000").toNumberString()).toStrictEqual("123400000");
+      expect(BigFraction.fromString("00.123400").toNumberString()).toStrictEqual("0.1234");
       // negative numbers
-      expect(Fraction.fromString("-0001234.42").toNumberString()).toStrictEqual("-1234.42");
-      expect(Fraction.fromString("-00.1234").toNumberString()).toStrictEqual("-0.1234");
-      expect(Fraction.fromString("-00000123400000").toNumberString()).toStrictEqual("-123400000");
-      expect(Fraction.fromString("-00.123400").toNumberString()).toStrictEqual("-0.1234");
+      expect(BigFraction.fromString("-0001234.42").toNumberString()).toStrictEqual("-1234.42");
+      expect(BigFraction.fromString("-00.1234").toNumberString()).toStrictEqual("-0.1234");
+      expect(BigFraction.fromString("-00000123400000").toNumberString()).toStrictEqual("-123400000");
+      expect(BigFraction.fromString("-00.123400").toNumberString()).toStrictEqual("-0.1234");
     });
 
     it("Throws on multiple decimal points", () => {
       const throws = (): void => {
-        Fraction.fromString("123.45.6");
+        BigFraction.fromString("123.45.6");
       }
       expect(throws).toThrow("Input string contains more than one decimal point.");
     });
 
     it("Throws on unexpected character", () => {
       const throws = (): void => {
-        Fraction.fromString("12A3");
+        BigFraction.fromString("12A3");
       }
       expect(throws).toThrow("Input string contains a value that is not a digit, decimal point, or \"e\" notation exponential mark.");
     });
@@ -80,7 +80,7 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision Rounding.UP", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.UP)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.UP)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.UP)).toStrictEqual("1234.012345679");
@@ -89,7 +89,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.UP)).toStrictEqual("124");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.UP)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.UP)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.UP)).toStrictEqual("-1234.012345679");
@@ -100,7 +100,7 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision Rounding.DOWN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.DOWN)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.DOWN)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.DOWN)).toStrictEqual("1234.012345678");
@@ -109,7 +109,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.DOWN)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.DOWN)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.DOWN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.DOWN)).toStrictEqual("-1234.012345678");
@@ -120,7 +120,7 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision Rounding.CEIL", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.CEIL)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.CEIL)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.CEIL)).toStrictEqual("1234.012345679");
@@ -129,7 +129,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.CEIL)).toStrictEqual("124");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.CEIL)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.CEIL)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.CEIL)).toStrictEqual("-1234.012345678");
@@ -140,7 +140,7 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision Rounding.FLOOR", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.FLOOR)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.FLOOR)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.FLOOR)).toStrictEqual("1234.012345678");
@@ -149,7 +149,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.FLOOR)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.FLOOR)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.FLOOR)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.FLOOR)).toStrictEqual("-1234.012345679");
@@ -160,7 +160,7 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision Rounding.HALF_UP", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.HALF_UP)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.HALF_UP)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.HALF_UP)).toStrictEqual("1234.012345679");
@@ -169,7 +169,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.HALF_UP)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.HALF_UP)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.HALF_UP)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.HALF_UP)).toStrictEqual("-1234.012345679");
@@ -178,13 +178,13 @@ describe('String operations', () => {
       expect(bnNeg.toFixed(-1, Rounding.HALF_UP)).toStrictEqual("-123");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toFixed(5, Rounding.HALF_UP)).toStrictEqual("1234.01235");
     });
 
     it("Prints output with fixed precision Rounding.HALF_DOWN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.HALF_DOWN)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.HALF_DOWN)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.HALF_DOWN)).toStrictEqual("1234.012345679");
@@ -193,7 +193,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.HALF_DOWN)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.HALF_DOWN)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.HALF_DOWN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.HALF_DOWN)).toStrictEqual("-1234.012345679");
@@ -202,13 +202,13 @@ describe('String operations', () => {
       expect(bnNeg.toFixed(-1, Rounding.HALF_DOWN)).toStrictEqual("-123");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toFixed(5, Rounding.HALF_DOWN)).toStrictEqual("1234.01234");
     });
 
     it("Prints output with fixed precision Rounding.HALF_EVEN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.HALF_EVEN)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.HALF_EVEN)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.HALF_EVEN)).toStrictEqual("1234.012345679");
@@ -217,7 +217,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.HALF_EVEN)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.HALF_EVEN)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.HALF_EVEN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.HALF_EVEN)).toStrictEqual("-1234.012345679");
@@ -226,16 +226,16 @@ describe('String operations', () => {
       expect(bnNeg.toFixed(-1, Rounding.HALF_EVEN)).toStrictEqual("-123");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toFixed(5, Rounding.HALF_EVEN)).toStrictEqual("1234.01234");
       const strHalfOdd: string = "1234.012335";
-      const bnHalfOdd: Fraction = Fraction.fromString(strHalfOdd);
+      const bnHalfOdd: BigFraction = BigFraction.fromString(strHalfOdd);
       expect(bnHalfOdd.toFixed(5, Rounding.HALF_EVEN)).toStrictEqual("1234.01234");
     });
 
     it("Prints output with fixed precision Rounding.NONE", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(18, Rounding.NONE)).toStrictEqual("1234.012345678900000000");
       expect(bn.toFixed(10, Rounding.NONE)).toStrictEqual("1234.0123456789");
       expect(bn.toFixed(9, Rounding.NONE)).toStrictEqual("1234.012345678");
@@ -244,7 +244,7 @@ describe('String operations', () => {
       expect(bn.toFixed(-1, Rounding.NONE)).toStrictEqual("123");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toFixed(18, Rounding.NONE)).toStrictEqual("-1234.012345678900000000");
       expect(bnNeg.toFixed(10, Rounding.NONE)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toFixed(9, Rounding.NONE)).toStrictEqual("-1234.012345678");
@@ -255,13 +255,13 @@ describe('String operations', () => {
 
     it("Prints output with fixed precision when rounding adds a zero", () => {
       const str: string = "1234.012345678901";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(10, Rounding.UP)).toStrictEqual("1234.0123456790");
     });
 
     it("Prints output with fixed precision when requested places eliminates string", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toFixed(-5, Rounding.UP)).toStrictEqual("0");
       expect(bn.toFixed(-4, Rounding.UP)).toStrictEqual("0");
     });
@@ -272,14 +272,14 @@ describe('String operations', () => {
 
     it("Prints output with significant digits Rounding.UP", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.UP)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.UP)).toStrictEqual("1234.012346");
       expect(bn.toSignificant(9, Rounding.UP)).toStrictEqual("1234.01235");
       expect(bn.toSignificant(4, Rounding.UP)).toStrictEqual("1235");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.UP)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.UP)).toStrictEqual("-1234.012346");
       expect(bnNeg.toSignificant(9, Rounding.UP)).toStrictEqual("-1234.01235");
@@ -288,14 +288,14 @@ describe('String operations', () => {
 
     it("Prints output with significant digits Rounding.DOWN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.DOWN)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.DOWN)).toStrictEqual("1234.012345");
       expect(bn.toSignificant(9, Rounding.DOWN)).toStrictEqual("1234.01234");
       expect(bn.toSignificant(4, Rounding.DOWN)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.DOWN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.DOWN)).toStrictEqual("-1234.012345");
       expect(bnNeg.toSignificant(9, Rounding.DOWN)).toStrictEqual("-1234.01234");
@@ -304,14 +304,14 @@ describe('String operations', () => {
 
     it("Prints output with significant digits Rounding.CEIL", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.CEIL)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.CEIL)).toStrictEqual("1234.012346");
       expect(bn.toSignificant(9, Rounding.CEIL)).toStrictEqual("1234.01235");
       expect(bn.toSignificant(4, Rounding.CEIL)).toStrictEqual("1235");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.CEIL)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.CEIL)).toStrictEqual("-1234.012345");
       expect(bnNeg.toSignificant(9, Rounding.CEIL)).toStrictEqual("-1234.01234");
@@ -320,14 +320,14 @@ describe('String operations', () => {
 
     it("Prints output with significant digits Rounding.FLOOR", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.FLOOR)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.FLOOR)).toStrictEqual("1234.012345");
       expect(bn.toSignificant(9, Rounding.FLOOR)).toStrictEqual("1234.01234");
       expect(bn.toSignificant(4, Rounding.FLOOR)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.FLOOR)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.FLOOR)).toStrictEqual("-1234.012346");
       expect(bnNeg.toSignificant(9, Rounding.FLOOR)).toStrictEqual("-1234.01235");
@@ -336,77 +336,77 @@ describe('String operations', () => {
 
     it("Prints output with significant digits Rounding.HALF_UP", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.HALF_UP)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.HALF_UP)).toStrictEqual("1234.012346");
       expect(bn.toSignificant(9, Rounding.HALF_UP)).toStrictEqual("1234.01235");
       expect(bn.toSignificant(4, Rounding.HALF_UP)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.HALF_UP)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.HALF_UP)).toStrictEqual("-1234.012346");
       expect(bnNeg.toSignificant(9, Rounding.HALF_UP)).toStrictEqual("-1234.01235");
       expect(bnNeg.toSignificant(4, Rounding.HALF_UP)).toStrictEqual("-1234");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toSignificant(9, Rounding.HALF_UP)).toStrictEqual("1234.01235");
     });
 
     it("Prints output with significant digits Rounding.HALF_DOWN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.HALF_DOWN)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.HALF_DOWN)).toStrictEqual("1234.012346");
       expect(bn.toSignificant(9, Rounding.HALF_DOWN)).toStrictEqual("1234.01235");
       expect(bn.toSignificant(4, Rounding.HALF_DOWN)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.HALF_DOWN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.HALF_DOWN)).toStrictEqual("-1234.012346");
       expect(bnNeg.toSignificant(9, Rounding.HALF_DOWN)).toStrictEqual("-1234.01235");
       expect(bnNeg.toSignificant(4, Rounding.HALF_DOWN)).toStrictEqual("-1234");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toSignificant(9, Rounding.HALF_DOWN)).toStrictEqual("1234.01234");
     });
 
     it("Prints output with significant digits Rounding.HALF_EVEN", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.HALF_EVEN)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.HALF_EVEN)).toStrictEqual("1234.012346");
       expect(bn.toSignificant(9, Rounding.HALF_EVEN)).toStrictEqual("1234.01235");
       expect(bn.toSignificant(4, Rounding.HALF_EVEN)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.HALF_EVEN)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.HALF_EVEN)).toStrictEqual("-1234.012346");
       expect(bnNeg.toSignificant(9, Rounding.HALF_EVEN)).toStrictEqual("-1234.01235");
       expect(bnNeg.toSignificant(4, Rounding.HALF_EVEN)).toStrictEqual("-1234");
 
       const strHalf: string = "1234.012345";
-      const bnHalf: Fraction = Fraction.fromString(strHalf);
+      const bnHalf: BigFraction = BigFraction.fromString(strHalf);
       expect(bnHalf.toSignificant(9, Rounding.HALF_EVEN)).toStrictEqual("1234.01234");
       const strHalfOdd: string = "1234.012335";
-      const bnHalfOdd: Fraction = Fraction.fromString(strHalfOdd);
+      const bnHalfOdd: BigFraction = BigFraction.fromString(strHalfOdd);
       expect(bnHalfOdd.toSignificant(9, Rounding.HALF_EVEN)).toStrictEqual("1234.01234");
     });
 
     it("Prints output with significant digits Rounding.NONE", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(18, Rounding.NONE)).toStrictEqual("1234.0123456789");
       expect(bn.toSignificant(10, Rounding.NONE)).toStrictEqual("1234.012345");
       expect(bn.toSignificant(9, Rounding.NONE)).toStrictEqual("1234.01234");
       expect(bn.toSignificant(4, Rounding.NONE)).toStrictEqual("1234");
 
       const strNeg: string = "-1234.0123456789";
-      const bnNeg: Fraction = Fraction.fromString(strNeg);
+      const bnNeg: BigFraction = BigFraction.fromString(strNeg);
       expect(bnNeg.toSignificant(18, Rounding.NONE)).toStrictEqual("-1234.0123456789");
       expect(bnNeg.toSignificant(10, Rounding.NONE)).toStrictEqual("-1234.012345");
       expect(bnNeg.toSignificant(9, Rounding.NONE)).toStrictEqual("-1234.01234");
@@ -415,13 +415,13 @@ describe('String operations', () => {
 
     it("Prints output with significant digits when rounding would add a zero", () => {
       const str: string = "1234.01234567891";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(14, Rounding.UP)).toStrictEqual("1234.012345679");
     });
 
     it("Prints output with significant digits when requested digits is zero or negative", () => {
       const str: string = "1234.0123456789";
-      const bn: Fraction = Fraction.fromString(str);
+      const bn: BigFraction = BigFraction.fromString(str);
       expect(bn.toSignificant(0, Rounding.UP)).toStrictEqual("0");
       expect(bn.toSignificant(-1, Rounding.UP)).toStrictEqual("0");
     });
@@ -429,7 +429,7 @@ describe('String operations', () => {
 
   describe("toString", () => {
     const str: string = "1234.42";
-    const frac: Fraction = Fraction.fromString(str);
+    const frac: BigFraction = BigFraction.fromString(str);
     expect(frac.toString()).toStrictEqual("[123442, 100]");
   });
 });
