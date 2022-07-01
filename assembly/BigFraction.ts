@@ -33,19 +33,17 @@ export class BigFraction {
   static from<T>(val: T): BigFraction {
     if (val instanceof BigFraction) return val;
     // @ts-ignore
-    if (val instanceof Array) return BigFraction.fromArray(val);
+    if (isArray<T>(val)) return BigFraction.fromArray(val);
     // @ts-ignore
     if (val instanceof BigNumber) return BigFraction.fromBigNumber(val);
     // @ts-ignore
-    if (val instanceof string) return BigFraction.fromString(val);
+    if (isString<T>(val)) return BigFraction.fromString(val);
     // @ts-ignore
     if (val instanceof BigInt) return new BigFraction(val);
     // @ts-ignore
     if (val instanceof Fraction) return BigFraction.fromFraction(val);
     // @ts-ignore
-    if (val instanceof f32) return BigFraction.fromBigNumber(BigNumber.fromFloat64(<f64>val));
-    // @ts-ignore
-    if (val instanceof f64) return BigFraction.fromBigNumber(BigNumber.fromFloat64(val));
+    if (isFloat<T>(val)) return BigFraction.fromBigNumber(BigNumber.fromFloat64(<f64>val));
     // @ts-ignore
     if (val instanceof i8) return new BigFraction(BigInt.fromInt16(<i16>val));
     // @ts-ignore

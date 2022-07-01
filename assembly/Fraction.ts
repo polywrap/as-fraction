@@ -1,14 +1,6 @@
-import { BigInt } from "as-bigint";
-import { BigNumber, Rounding } from "as-bignumber";
-import {BigFraction} from "./BigFraction";
-
 export class Fraction<T extends Number> {
   public readonly numerator: T;
   public readonly denominator: T;
-
-  // 155, the number of digits in the maximum value of a 512 bit integer
-  public static DEFAULT_PRECISION: i32 = 155;
-  public static DEFAULT_ROUNDING: Rounding = Rounding.HALF_UP;
 
   // CONSTRUCTORS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,20 +18,18 @@ export class Fraction<T extends Number> {
   /**
    * Returns a new {Fraction} instance from generic type {TArg}.
    *
-   * @param  val the number as {BigNumber}, {BigInt}, {BigInt[]}, string, or {number}
+   * @param  val the number as {Fraction<T>}, {int[]}, string, or {number}
    * @return the new {Fraction<TOut>} instance
    */
-  static from<U, TOut extends Number = i64>(val: U): Fraction<TOut> {
+  static from<U, TOut extends Number = i32>(val: U): Fraction<TOut> {
     if (val instanceof Fraction) {
       if (nameof<TOut>() == nameof(val.numerator)) return val;
       return val.toFraction<TOut>();
     }
     if (isArray<U>(val)) return this.fromArray(val);
-    if (isString<U>(val)) return Fraction.fromString<TOut>(val);
-    if (isFloat<U>(val)) return Fraction.fromBigNumber<TOut>(BigNumber.fromFloat64(<f64>val));
+    if (isString<U>(val)) return this.fromString<TOut>(val);
+    if (isFloat<U>(val)) return this.fromFloat<U, TOut>(val);
     if (isInteger<U>(val)) return new Fraction<TOut>(<TOut>val, <TOut>1);
-    if (val instanceof BigNumber) return Fraction.fromBigNumber<TOut>(val);
-    if (val instanceof BigInt) return Fraction.fromBigInt<TOut>(val);
 
     throw new TypeError("Unsupported generic type " + nameof<U>(val));
   }
@@ -56,43 +46,170 @@ export class Fraction<T extends Number> {
     return new Fraction<W>(arr[0], arr[1]);
   }
 
-  static fromBigNumber<TOut extends Number = i64>(val: BigNumber): Fraction<TOut> {
-    if (!isInteger<TOut>()) {
-      throw new TypeError("Unsupported generic type " + nameof<TOut>());
+  static fromFloat<U extends Number, TOut extends Number = i32>(val: U): Fraction<TOut> {
+    if (!isFloat<U>(val)) {
+      throw new TypeError("Unsupported generic type " + nameof<U>(val) + ". Expected f32 or f64.");
     }
-    if (val.e > 0) {
-      const scale = BigInt.fromString("1".padEnd(1 + val.e, "0"));
-      if (val.m.isNegative) {
-        return new Fraction<TOut>(<TOut>val.m.toInt64(), <TOut>scale.toUInt64());
+    return Fraction.fromString<TOut>(val.toString());
+  }
+
+  static fromString<TOut extends Number = i32>(val: string): Fraction<TOut> {
+    // number values
+    let mantissa: TOut; // mantissa
+    let exponent: i32 = 0; // exponent
+    let p: i32 = 0; // precision
+
+    // values for parsing string
+    let offset: i32 = 0;
+    let len: i32 = val.length;
+
+    // handle the sign
+    let isNeg: boolean = false;
+    if (val.charAt(offset) == '-') {
+      if (!isSigned<TOut>()) {
+        throw new Error(`Cannot construct Fraction<${nameof<TOut>()}> from negative decimal string ${val}`)
       }
-      return new Fraction<TOut>(<TOut>val.m.toUInt64(), <TOut>scale.toUInt64());
-    } else if (val.e < 0) {
-      const scale = BigInt.fromString("1".padEnd(1 - val.e, "0"));
-      const intVal: BigInt = val.m.mul(scale);
-      if (intVal.isNegative) {
-        return new Fraction<TOut>(<TOut>intVal.toInt64(), <TOut>1);
+      isNeg = true;
+      offset++;
+      len--;
+    } else if (val.charAt(offset) == '+') { // leading + allowed
+      offset++;
+      len--;
+    }
+
+    let dot: boolean = false; // decimal point
+    let idx: i32 = 0;
+    let codes: i32[] = [];
+    for (; len > 0; offset++, len--) {
+      const char: i32 = val.charCodeAt(offset);
+
+      // char is digit
+      if (char >= 48 && char <= 57) {
+        // char is 0
+        if (char == 48) {
+          // char is first leading zero
+          if (p == 0) {
+            codes[idx] = char;
+            p = 1;
+            // char is a zero that follows another digit
+          } else if (idx != 0) {
+            codes[idx++] = char;
+            ++p;
+          }
+          // char is non-zero digit
+        } else {
+          // increment precision if char is not redundant leading zero
+          if (p != 1 || idx != 0) {
+            ++p;
+          }
+          codes[idx++] = char;
+        }
+        if (dot) {
+          ++exponent;
+        }
+        continue;
       }
-      return new Fraction<TOut>(<TOut>intVal.toUInt64(), <TOut>1);
+
+      // char is decimal point
+      if (char == 46) {
+        if (dot) {
+          throw new Error("Input string contains more than one decimal point.");
+        }
+        dot = true;
+        continue;
+      }
+
+      // exponential notation mark expected
+      if (char != 69 && char != 101) {
+        throw new Error("Input string contains a character that is not a digit, decimal point, or \"e\" notation exponential mark.");
+      }
+      const eMark: i64 = Fraction.parseExp(val, offset, len);
+      if (eMark != 0) {
+        exponent = Fraction.overflowGuard(<i64>exponent - eMark);
+      }
+      break;
+    }
+
+    // Check if digits
+    if (p == 0) {
+      throw new Error("No digits found.");
+    }
+
+    mantissa = <TOut>(isNeg ? I64.parseInt("-" + String.fromCharCodes(codes))  : U64.parseInt(String.fromCharCodes(codes)));
+    if (mantissa == 0) {
+      return new Fraction<TOut>(<TOut>0, <TOut>1);
+    }
+
+    return Fraction.fromFloatParams<TOut>(mantissa, exponent);
+  }
+  
+  private static fromFloatParams<TOut extends Number>(mantissa: TOut, exponent: i32): Fraction<TOut> {
+    if (exponent > 0) {
+      const scale: TOut = <TOut>U64.parseInt("1".padEnd(1 + exponent, "0"));
+      return new Fraction<TOut>(mantissa, <TOut>scale);
+    } else if (exponent < 0) {
+      const scale: TOut = <TOut>U64.parseInt("1".padEnd(1 - exponent, "0"));
+      return new Fraction<TOut>(mantissa * scale, <TOut>1);
     } else {
-      if (val.m.isNegative) {
-        return new Fraction<TOut>(<TOut>val.m.toInt64(), <TOut>1);
+      return new Fraction<TOut>(mantissa, <TOut>1);
+    }
+  }
+
+  private static parseExp(val: string, offset: i32, len: i32): i32 {
+    offset++;
+    let char: string = val.charAt(offset);
+    len--;
+
+    const negexp: boolean = char == '-';
+    // sign
+    if (negexp || char == '+') {
+      offset++;
+      char = val.charAt(offset);
+      len--;
+    }
+
+    if (len <= 0) {
+      throw new Error("No digits following exponential mark.");
+    }
+    // skip leading zeros in the exponent
+    while (len > 10 && char == '0') {
+      offset++;
+      char = val.charAt(offset);
+      len--;
+    }
+    if (len > 10) {
+      throw new Error("Too many nonzero exponent digits.");
+    }
+
+    let exp: i64 = 0;
+    for (;; len--) {
+      const code = char.charCodeAt(0);
+      if (code < 48 || code > 57) {
+        throw new Error("Encountered non-digit character following exponential mark.");
       }
-      return new Fraction<TOut>(<TOut>val.m.toUInt64(), <TOut>1);
+      exp = exp * 10 + (code - 48);
+      if (len == 1) {
+        break; // that was final character
+      }
+      char = val.charAt(++offset);
     }
+
+    // apply sign
+    if (negexp) {
+      exp = -exp;
+    }
+    return Fraction.overflowGuard(exp, false);
   }
 
-  static fromBigInt<TOut extends Number = i64>(val: BigInt): Fraction<TOut> {
-    if (!isInteger<TOut>()) {
-      throw new TypeError("Unsupported generic type " + nameof<TOut>());
+  private static overflowGuard(k: i64, isZero: boolean = false): i32 {
+    let safeInt: i32 = <i32>k;
+    if (<i64>safeInt != k) {
+      if (!isZero) {
+        throw new Error("Integer overflow");
+      }
+      safeInt = k > I32.MAX_VALUE ? I32.MAX_VALUE : I32.MIN_VALUE;
     }
-    return new Fraction<TOut>(<TOut>(isSigned<TOut>() ? val.toInt64() : val.toUInt64()), <TOut>1);
-  }
-
-  static fromString<TOut extends Number = i64>(val: string): Fraction<TOut> {
-    if (!isInteger<TOut>()) {
-      throw new TypeError("Unsupported generic type " + nameof<TOut>());
-    }
-    return Fraction.fromBigNumber<TOut>(BigNumber.fromString(val, 0));
+    return safeInt;
   }
 
   // OUTPUT ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,51 +218,11 @@ export class Fraction<T extends Number> {
     return `[${this.numerator}, ${this.denominator}]`
   }
 
-  toNumberString(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): string {
-    return BigNumber.fromFraction(
-        BigInt.from(this.numerator),
-        BigInt.from(this.denominator),
-        precision,
-        rounding
-    ).toString();
-  }
-
-  toSignificant(
-      digits: i32 = 18,
-      rounding: Rounding = Rounding.HALF_UP
-  ): string {
-    if (digits < 0) {
-      return "0";
+  toNumberString(): string {
+    if (this.isInteger || this.numerator == 0) {
+      return this.toInt().toString();
     }
-    return BigNumber.fromFraction(
-        BigInt.from(this.numerator),
-        BigInt.from(this.denominator),
-        Fraction.DEFAULT_PRECISION,
-        rounding
-    ).toSignificant(digits, rounding);
-  }
-
-  toFixed(
-      places: i32 = 18,
-      rounding: Rounding = Rounding.HALF_UP
-  ): string {
-    return BigNumber.fromFraction(
-        BigInt.from(this.numerator),
-        BigInt.from(this.denominator),
-        Fraction.DEFAULT_PRECISION,
-        rounding
-    ).toFixed(places, rounding);
-  }
-
-  toBigNumber(precision: i32 = Fraction.DEFAULT_PRECISION, rounding: Rounding = Fraction.DEFAULT_ROUNDING): BigNumber {
-    const numerator: BigNumber = BigNumber.from(this.numerator);
-    const denominator: BigNumber = BigNumber.from(this.denominator);
-    return numerator.div(denominator, precision, rounding);
-  }
-
-  // performs floor division
-  toBigInt(): BigInt {
-    return BigInt.from(this.numerator / this.denominator);
+    return this.toFloat<f64>().toString();
   }
 
   // performs floor division
@@ -153,12 +230,11 @@ export class Fraction<T extends Number> {
     return this.numerator / this.denominator;
   }
 
-  toFloat32(): f32 {
-    return <f32>this.numerator / <f32>this.denominator;
-  }
-
-  toFloat64(): f64 {
-    return <f64>this.numerator / <f64>this.denominator;
+  toFloat<TFloat extends Number = f64>(): TFloat {
+    if (!isFloat<TFloat>()) {
+      throw new TypeError("Unsupported generic type " + nameof<TFloat>() + ". Expected f32 or f64.");
+    }
+    return <TFloat>this.numerator / <TFloat>this.denominator;
   }
 
   toArray(): Array<T> {
@@ -172,12 +248,8 @@ export class Fraction<T extends Number> {
     return new Fraction<W>(<W>this.numerator, <W>this.denominator);
   }
 
-  toBigFraction(): BigFraction {
-    return BigFraction.fromArray([this.numerator, this.denominator]);
-  }
-
   quotient(): f64 {
-    return <f64>this.numerator / <f64> this.denominator;
+    return <f64>this.numerator / <f64>this.denominator;
   }
 
   copy(): Fraction<T> {
@@ -327,7 +399,7 @@ export class Fraction<T extends Number> {
     if (this.numerator == 0) {
       return this.copy();
     }
-    return Fraction.from(sqrt<f64>(<f64>this.numerator) / sqrt<f64>(<f64>this.denominator));
+    return Fraction.fromFloat<f64, T>(sqrt<f64>(<f64>this.numerator / <f64>this.denominator));
   }
 
   pow(k: i32): Fraction<T> {
@@ -348,7 +420,7 @@ export class Fraction<T extends Number> {
   }
 
   get isInteger(): boolean {
-    return this.numerator >= this.denominator && (this.numerator % this.denominator == 0)
+    return abs<T>(this.numerator) >= abs<T>(this.denominator) && (this.numerator % this.denominator == 0)
   }
 
   // SYNTAX SUGAR ///////////////////////////////////////////////////////////////////////////////////////////////////

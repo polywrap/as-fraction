@@ -9,24 +9,27 @@ const randomCases: TestCase[] = randomTestCases;
 
 describe("Arithmetic operations", () => {
 
+  const precision = 6;
+
   it("adds", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
-      const y = Fraction.fromString(testCase.y);
-      const result = x.add(y).toSignificant(18);
-      const expected = Fraction.fromString(testCase.sum).toSignificant(18);
+      const x = Fraction.fromString<i64>(testCase.x);
+      const y = Fraction.fromString<i64>(testCase.y);
+      const result = x.add(y).toNumberString();
+      const expected = Fraction.fromString<i64>(testCase.sum).toNumberString();
       expect(result).toStrictEqual(expected);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const bnY = BigNumber.fromString(testCase.y.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
-      const y = Fraction.fromBigNumber(bnY);
-      const result = x.add(y).toSignificant(18);
-      const expected = bnX.add(bnY).toSignificant(18);
+      const caseX: string = testCase.x.substring(0, precision);
+      const caseY: string = testCase.y.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const bnY = BigNumber.fromString(caseY);
+      const x = Fraction.fromString<i64>(caseX);
+      const y = Fraction.fromString<i64>(caseY);
+      const result = x.add(y).toNumberString();
+      const expected = BigNumber.from(bnX.add(bnY).toFloat64()).toString();
       expect(result).toStrictEqual(expected);
     }
   });
@@ -34,21 +37,22 @@ describe("Arithmetic operations", () => {
   it("subtracts", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
-      const y = Fraction.fromString(testCase.y);
-      const result = x.sub(y).toSignificant(18);
-      const expected = Fraction.fromString(testCase.difference).toSignificant(18);
+      const x = Fraction.fromString<i64>(testCase.x);
+      const y = Fraction.fromString<i64>(testCase.y);
+      const result = x.sub(y).toNumberString();
+      const expected = Fraction.fromString<i64>(testCase.difference).toNumberString();
       expect(result).toStrictEqual(expected);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const bnY = BigNumber.fromString(testCase.y.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
-      const y = Fraction.fromBigNumber(bnY);
-      const result = x.sub(y).toSignificant(18);
-      const expected = bnX.sub(bnY).toSignificant(18);
+      const caseX: string = testCase.x.substring(0, precision);
+      const caseY: string = testCase.y.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const bnY = BigNumber.fromString(caseY);
+      const x = Fraction.fromString<i64>(caseX);
+      const y = Fraction.fromString<i64>(caseY);
+      const result = x.sub(y).toNumberString();
+      const expected = BigNumber.from(bnX.sub(bnY).toFloat64()).toString();
       expect(result).toStrictEqual(expected);
     }
   });
@@ -56,21 +60,22 @@ describe("Arithmetic operations", () => {
   it("multiplies", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
-      const y = Fraction.fromString(testCase.y);
-      const result = x.mul(y).toSignificant(18);
-      const expected = Fraction.fromString(testCase.product).toSignificant(18);
+      const x = Fraction.fromString<i64>(testCase.x);
+      const y = Fraction.fromString<i64>(testCase.y);
+      const result = x.mul(y).toNumberString();
+      const expected = Fraction.fromString<i64>(testCase.product).toNumberString();
       expect(result).toStrictEqual(expected);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 7;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const bnY = BigNumber.fromString(testCase.y.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
-      const y = Fraction.fromBigNumber(bnY);
-      const result = x.mul(y).toSignificant(18);
-      const expected = bnX.mul(bnY).toSignificant(18);
+      const caseX: string = testCase.x.substring(0, precision);
+      const caseY: string = testCase.y.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const bnY = BigNumber.fromString(caseY);
+      const x = Fraction.fromString<i64>(caseX);
+      const y = Fraction.fromString<i64>(caseY);
+      const result = x.mul(y).toNumberString();
+      const expected = BigNumber.from(bnX.mul(bnY).toFloat64()).toString();
       expect(result).toStrictEqual(expected);
     }
   });
@@ -78,27 +83,28 @@ describe("Arithmetic operations", () => {
   it("divides", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const y = Fraction.fromString(testCase.y);
+      const x = Fraction.fromString<i64>(testCase.x);
+      const y = Fraction.fromString<i64>(testCase.y);
       if (y.isZero()) {
         continue;
       }
-      const x = Fraction.fromString(testCase.x);
-      const result = x.div(y).toSignificant(18)
-      const expected = BigNumber.fromString(testCase.quotient).toSignificant(18);
+      const result = x.div(y).toNumberString();
+      const expected = Fraction.fromString<i64>(testCase.quotient).toNumberString();
       expect(result).toStrictEqual(expected);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnY = BigNumber.fromString(testCase.y.substring(0, precision));
+      const caseX: string = testCase.x.substring(0, precision);
+      const caseY: string = testCase.y.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const bnY = BigNumber.fromString(caseY);
       if (bnY.isZero()) {
         continue;
       }
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
-      const y = Fraction.fromBigNumber(bnY);
-      const result = x.div(y).toSignificant(18)
-      const expected = bnX.div(bnY).toSignificant(18)
+      const x = Fraction.fromString<i64>(caseX);
+      const y = Fraction.fromString<i64>(caseY);
+      const result = x.mul(y).toNumberString();
+      const expected = BigNumber.from(bnX.mul(bnY).toFloat64()).toString();
       expect(result).toStrictEqual(expected);
     }
   });
@@ -106,35 +112,48 @@ describe("Arithmetic operations", () => {
   it("square root", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
+      const x = Fraction.fromString<i64>(testCase.x);
       if (!x.isNegative) {
-        const result = x.sqrt().toSignificant(13);
-        const expected = Fraction.fromString(testCase.sqrtX).toSignificant(13);
+        const result = x.sqrt().toNumberString();
+        const expected = BigNumber.from(BigNumber.fromString(testCase.x).sqrt().toFloat64()).toString();
         expect(result).toStrictEqual(expected);
       }
-      const y = Fraction.fromString(testCase.y);
+      const y = Fraction.fromString<i64>(testCase.y);
       if (!y.isNegative) {
-        const result = y.sqrt().toSignificant(13);
-        const expected = Fraction.fromString(testCase.sqrtY).toSignificant(13);
+        const result = y.sqrt().toNumberString();
+        const expected = BigNumber.from(BigNumber.fromString(testCase.y).sqrt().toFloat64()).toString();
         expect(result).toStrictEqual(expected);
       }
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
+      const caseX: string = testCase.x.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const x = Fraction.fromString<i64>(caseX);
       if (!x.isNegative) {
-        const result = x.sqrt().toSignificant(13);
-        const expected = bnX.sqrt().toSignificant(13);
-        expect(result).toStrictEqual(expected);
+        const result = x.sqrt().toNumberString();
+        const expected = BigNumber.from(bnX.sqrt().toFloat64()).toString();
+        // same length due to precision
+        let resultTrunc = result.substr(0, expected.length);
+        let expectedTrunc = expected.substr(0, result.length);
+        // allow last digit to differ due to rounding/precision
+        resultTrunc = resultTrunc.substring(0, resultTrunc.length - 1);
+        expectedTrunc = expectedTrunc.substring(0, expectedTrunc.length - 1);
+        expect(resultTrunc).toStrictEqual(expectedTrunc);
       }
-      const bnY = BigNumber.fromString(testCase.y.substring(0, precision));
-      const y = Fraction.fromBigNumber(bnY);
+      const caseY: string = testCase.y.substring(0, precision);
+      const bnY = BigNumber.fromString(caseY);
+      const y = Fraction.fromString<i64>(caseY);
       if (!y.isNegative) {
-        const result = y.sqrt().toSignificant(13);
-        const expected = bnY.sqrt().toSignificant(13);
-        expect(result).toStrictEqual(expected);
+        const result = y.sqrt().toNumberString();
+        const expected = BigNumber.from(bnY.sqrt().toFloat64()).toString();
+        // same length due to precision
+        let resultTrunc = result.substr(0, expected.length);
+        let expectedTrunc = expected.substr(0, result.length);
+        // allow last digit to differ due to rounding/precision
+        resultTrunc = resultTrunc.substring(0, resultTrunc.length - 1);
+        expectedTrunc = expectedTrunc.substring(0, expectedTrunc.length - 1);
+        expect(resultTrunc).toStrictEqual(expectedTrunc);
       }
     }
   });
@@ -142,20 +161,18 @@ describe("Arithmetic operations", () => {
   it("square", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
-      // square
-      const squared = x.square().toSignificant(18);
-      const expectedSquare = Fraction.fromString(testCase.xSquare).toSignificant(18);
+      const x = Fraction.fromString<i64>(testCase.x);
+      const squared = x.square().toNumberString();
+      const expectedSquare = Fraction.fromString<i64>(testCase.xSquare).toNumberString();
       expect(squared).toStrictEqual(expectedSquare);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
-      // square
-      const squared = x.square().toSignificant(18);
-      const expectedSquare = bnX.square().toSignificant(18);
+      const caseX: string = testCase.x.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const x = Fraction.fromString<i64>(caseX);
+      const squared = x.square().toNumberString()
+      const expectedSquare = BigNumber.from(bnX.square().toFloat64()).toString();
       expect(squared).toStrictEqual(expectedSquare);
     }
   });
@@ -163,28 +180,28 @@ describe("Arithmetic operations", () => {
   it("pow", () => {
     for (let i = 0; i < plannedCases.length; i++) {
       const testCase: TestCase = plannedCases[i];
-      const x = Fraction.fromString(testCase.x);
+      const x = Fraction.fromString<i64>(testCase.x);
       // square
-      const squared = x.pow(2).toSignificant(18);
-      const expectedSquare = Fraction.fromString(testCase.xSquare).toSignificant(18);
+      const squared = x.pow(2).toNumberString()
+      const expectedSquare = Fraction.fromString<i64>(testCase.xSquare).toNumberString();
       expect(squared).toStrictEqual(expectedSquare);
       // cube
-      const cubed = x.pow(3).toSignificant(18);
-      const expectedCube = Fraction.fromString(testCase.xCube).toSignificant(18);
+      const cubed = x.pow(3).toNumberString()
+      const expectedCube = Fraction.fromString<i64>(testCase.xCube).toNumberString();
       expect(cubed).toStrictEqual(expectedCube);
     }
     for (let i = 0; i < randomCases.length; i++) {
-      const precision = 6;
       const testCase: TestCase = randomCases[i];
-      const bnX = BigNumber.fromString(testCase.x.substring(0, precision));
-      const x = Fraction.fromBigNumber(bnX);
+      const caseX: string = testCase.x.substring(0, precision);
+      const bnX = BigNumber.fromString(caseX);
+      const x = Fraction.fromString<i64>(caseX);
       // square
-      const squared = x.pow(2).toSignificant(18);
-      const expectedSquare = bnX.pow(2).toSignificant(18);
+      const squared = x.pow(2).toNumberString();
+      const expectedSquare = BigNumber.from(bnX.pow(2).toFloat64()).toString();
       expect(squared).toStrictEqual(expectedSquare);
       // cube
-      const cubed = x.pow(3).toSignificant(18);
-      const expectedCube = bnX.pow(3).toSignificant(18);
+      const cubed = x.pow(3).toFloat().toString();
+      const expectedCube = bnX.pow(3).toFloat64().toString();
       expect(cubed).toStrictEqual(expectedCube);
     }
   });
