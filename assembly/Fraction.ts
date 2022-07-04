@@ -1,3 +1,6 @@
+// TODO: Should I track sign in a variable and only use unsigned integers? simplifies code
+// TODO: Should I accept floats as numerator and denominator?
+
 export class Fraction<T extends number> {
   public readonly numerator: T;
   public readonly denominator: T;
@@ -11,8 +14,20 @@ export class Fraction<T extends number> {
     if (denominator == 0) {
       throw new Error("Divide by zero");
     }
-    this.numerator = numerator;
-    this.denominator = denominator;
+    const gcd: T = Fraction.gcd(numerator, denominator);
+    this.numerator = numerator / gcd;
+    this.denominator = denominator / gcd;
+  }
+
+  private static gcd<T extends number>(a: T, b: T): T {
+    a = abs<T>(a);
+    b = abs<T>(b);
+    while( b != 0 ) {
+      a %= b;
+      if ( a == 0 ) return b;
+      b %= a;
+    }
+    return a;
   }
 
   /**

@@ -2,6 +2,12 @@ import { Fraction } from "../../Fraction";
 
 describe('Construction', () => {
 
+  it("gcd normalization", () => {
+    expect(new Fraction<i32>(20, 4).toArray()).toStrictEqual([20 / 4, 4 / 4]);
+    expect(new Fraction<i32>(4200, 3780).toArray()).toStrictEqual([4200 / 420, 3780 / 420]);
+    expect(new Fraction<i32>(421345631,56325234).toArray()).toStrictEqual([421345631 / 7, 56325234 / 7]);
+  });
+
   it("fromArray", () => {
     const arr = [1,3];
     const frac = Fraction.fromArray(arr);
@@ -48,7 +54,7 @@ describe('Construction', () => {
 
     expect(
         new Fraction<i32>(12, 4).toArray()
-    ).toStrictEqual([12, 4])
+    ).toStrictEqual([3, 1])
 
     expect(
         new Fraction<i32>(16, 5).toArray()
